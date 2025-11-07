@@ -334,3 +334,49 @@ This is not a valid quiz format
 
     # Original markdown should remain since quiz processing failed
     assert "<?quiz?>" in result
+
+
+def test_quiz_in_fenced_code_block(plugin, mock_page, mock_config):
+    """Test that quiz tags inside fenced code blocks (``` or ~~~) are not processed."""
+    markdown = """
+Here's an example of quiz syntax with backticks:
+
+```markdown
+<?quiz?>
+What is 2+2?
+- [x] 4
+- [ ] 3
+<?/quiz?>
+```
+
+And with tildes:
+
+~~~
+<?quiz?>
+What is 1+1?
+- [x] 2
+- [ ] 3
+<?/quiz?>
+~~~
+
+This is a real quiz:
+
+<?quiz?>
+What is 3+3?
+- [x] 6
+- [ ] 7
+<?/quiz?>
+"""
+
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+
+    # The quizzes in the code blocks should remain unchanged
+    assert "```markdown" in result
+    assert "~~~" in result
+    assert result.count("<?quiz?>") == 2  # Two in code blocks
+    assert result.count("<?/quiz?>") == 2  # Two in code blocks
+
+    # The real quiz should be processed
+    assert "What is 3+3?" in result
+    assert 'type="radio"' in result
+    assert 'id="quiz-0"' in result  # Only one quiz was processed
