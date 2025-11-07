@@ -1,3 +1,6 @@
+// Constants
+const STORAGE_KEY_PREFIX = "quiz_progress_";
+
 // Global quiz tracker
 const quizTracker = {
   quizzes: {},
@@ -110,7 +113,7 @@ const quizTracker = {
 
   saveToStorage: function () {
     try {
-      const pageKey = "quiz_progress_" + window.location.pathname;
+      const pageKey = STORAGE_KEY_PREFIX + window.location.pathname;
       localStorage.setItem(pageKey, JSON.stringify(this.quizzes));
     } catch (e) {
       // Silently fail if localStorage is not available
@@ -119,7 +122,7 @@ const quizTracker = {
 
   loadFromStorage: function () {
     try {
-      const pageKey = "quiz_progress_" + window.location.pathname;
+      const pageKey = STORAGE_KEY_PREFIX + window.location.pathname;
       const stored = localStorage.getItem(pageKey);
       if (stored) {
         this.quizzes = JSON.parse(stored);
@@ -421,10 +424,10 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
   resetButton.addEventListener("click", () => {
     // Clear all selections
     const allInputs = fieldset.querySelectorAll('input[name="answer"]');
-    for (let i = 0; i < allInputs.length; i++) {
-      allInputs[i].checked = false;
-      allInputs[i].disabled = false;
-    }
+    allInputs.forEach((input) => {
+      input.checked = false;
+      input.disabled = false;
+    });
     // Reset colors
     resetFieldset(fieldset);
     // Hide content section
@@ -452,25 +455,24 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
     let correctAnswers = fieldset.querySelectorAll('input[name="answer"][correct]');
     // Check if all correct answers are selected
     let is_correct = selectedAnswers.length === correctAnswers.length;
-    for (let i = 0; i < selectedAnswers.length; i++) {
-      if (!selectedAnswers[i].hasAttribute("correct")) {
+    Array.from(selectedAnswers).forEach((answer) => {
+      if (!answer.hasAttribute("correct")) {
         is_correct = false;
-        break;
       }
-    }
+    });
     let section = quiz.querySelector("section");
     if (is_correct) {
       section.classList.remove("hidden");
       resetFieldset(fieldset);
       // Mark all fields with colors
       const allAnswers = fieldset.querySelectorAll('input[name="answer"]');
-      for (let i = 0; i < allAnswers.length; i++) {
-        if (allAnswers[i].hasAttribute("correct")) {
-          allAnswers[i].parentElement.classList.add("correct");
+      allAnswers.forEach((answer) => {
+        if (answer.hasAttribute("correct")) {
+          answer.parentElement.classList.add("correct");
         } else {
-          allAnswers[i].parentElement.classList.add("wrong");
+          answer.parentElement.classList.add("wrong");
         }
-      }
+      });
       // Show correct feedback
       feedbackDiv.classList.remove("hidden", "incorrect");
       feedbackDiv.classList.add("correct");
@@ -479,18 +481,18 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
       section.classList.add("hidden");
       resetFieldset(fieldset);
       // Mark wrong fields with colors
-      for (let i = 0; i < selectedAnswers.length; i++) {
-        if (!selectedAnswers[i].hasAttribute("correct")) {
-          selectedAnswers[i].parentElement.classList.add("wrong");
+      Array.from(selectedAnswers).forEach((answer) => {
+        if (!answer.hasAttribute("correct")) {
+          answer.parentElement.classList.add("wrong");
         } else {
-          selectedAnswers[i].parentElement.classList.add("correct");
+          answer.parentElement.classList.add("correct");
         }
-      }
+      });
       // If show-correct is enabled, also show all correct answers
       if (quiz.hasAttribute("data-show-correct")) {
-        for (let i = 0; i < correctAnswers.length; i++) {
-          correctAnswers[i].parentElement.classList.add("correct");
-        }
+        correctAnswers.forEach((answer) => {
+          answer.parentElement.classList.add("correct");
+        });
       }
       // Show incorrect feedback
       feedbackDiv.classList.remove("hidden", "correct");
@@ -510,9 +512,9 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
     // Disable quiz after submission if option is enabled
     if (quiz.hasAttribute("data-disable-after-submit")) {
       const allInputs = fieldset.querySelectorAll('input[name="answer"]');
-      for (let i = 0; i < allInputs.length; i++) {
-        allInputs[i].disabled = true;
-      }
+      allInputs.forEach((input) => {
+        input.disabled = true;
+      });
       if (submitButton) {
         submitButton.disabled = true;
       }
@@ -529,9 +531,7 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
 });
 
 function resetFieldset(fieldset) {
-  const fieldsetChildren = fieldset.children;
-  for (let i = 0; i < fieldsetChildren.length; i++) {
-    fieldsetChildren[i].classList.remove("wrong");
-    fieldsetChildren[i].classList.remove("correct");
-  }
+  Array.from(fieldset.children).forEach((child) => {
+    child.classList.remove("wrong", "correct");
+  });
 }

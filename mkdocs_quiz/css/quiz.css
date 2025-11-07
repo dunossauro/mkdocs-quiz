@@ -38,15 +38,11 @@ form button:disabled {
 }
 
 .wrong label,
-.wrong label *,
-label.correct,
-label.correct * {
+.wrong label * {
   color: red;
 }
 .correct label,
-.correct label *,
-label.wrong,
-label.wrong * {
+.correct label * {
   color: green;
 }
 

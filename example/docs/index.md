@@ -1,3 +1,8 @@
+---
+quiz:
+    auto_number: true
+---
+
 # Quiz Example
 
 ## Single choice
@@ -8,7 +13,7 @@ Are you ready?
 - [ ] No!
 - [ ] Maybe!
 
-<h2>Provide some additional content</h2>
+Provide some additional content
 <?/quiz?>
 
 ## Multiple choice

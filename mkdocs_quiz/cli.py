@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 import typer
 from rich.console import Console
@@ -27,9 +26,9 @@ def convert_quiz_block(quiz_content: str) -> str:
     lines = quiz_content.strip().split("\n")
 
     question = None
-    answers: List[Tuple[str, str]] = []  # (type, text)
-    content_lines: List[str] = []
-    options: List[str] = []
+    answers: list[tuple[str, str]] = []  # (type, text)
+    content_lines: list[str] = []
+    options: list[str] = []
     in_content = False
 
     for line in lines:
@@ -41,11 +40,7 @@ def convert_quiz_block(quiz_content: str) -> str:
         if line.startswith("question:"):
             question = line.split("question:", 1)[1].strip()
         # Parse options that should be preserved
-        elif line.startswith("show-correct:"):
-            options.append(line)
-        elif line.startswith("auto-submit:"):
-            options.append(line)
-        elif line.startswith("disable-after-submit:"):
+        elif line.startswith(("show-correct:", "auto-submit:", "disable-after-submit:")):
             options.append(line)
         # Parse content separator
         elif line == "content:":
@@ -89,7 +84,7 @@ def convert_quiz_block(quiz_content: str) -> str:
     return "\n".join(result)
 
 
-def migrate_file(file_path: Path, dry_run: bool = False) -> Tuple[int, bool]:
+def migrate_file(file_path: Path, dry_run: bool = False) -> tuple[int, bool]:
     """Migrate quiz blocks in a single file.
 
     Args:

@@ -35,22 +35,16 @@ def mock_page(mock_config):
     return page
 
 
-def test_plugin_initialization(plugin):
-    """Test that the plugin initializes correctly."""
-    assert plugin.enabled is True
-    assert plugin.dirty is False
-
-
-def test_on_startup(plugin):
-    """Test the on_startup hook."""
-    plugin.on_startup(command="serve", dirty=True)
-    assert plugin.dirty is True
-
-
 def test_disabled_page(plugin, mock_page, mock_config):
     """Test that quiz processing is disabled when page meta is set."""
-    mock_page.meta["quiz"] = "disable"
-    markdown = "<?quiz?>question: Test?<?/quiz?>"
+    mock_page.meta["quiz"] = {"enabled": False}
+    markdown = """
+<?quiz?>
+Test question?
+- [x] Yes
+- [ ] No
+<?/quiz?>
+"""
 
     result = plugin.on_page_markdown(markdown, mock_page, mock_config)
 
@@ -199,11 +193,11 @@ What is **bold** text?
 
 
 def test_show_correct_disabled(plugin, mock_page, mock_config):
-    """Test that show-correct can be disabled (defaults to true)."""
+    """Test that show-correct can be disabled via page frontmatter (defaults to true)."""
+    mock_page.meta["quiz"] = {"show_correct": False}
     markdown = """
 <?quiz?>
 What is 2+2?
-show-correct: false
 - [x] 4
 - [ ] 3
 - [ ] 5
@@ -220,11 +214,11 @@ show-correct: false
 
 
 def test_auto_submit_disabled(plugin, mock_page, mock_config):
-    """Test that auto-submit can be disabled (defaults to true)."""
+    """Test that auto-submit can be disabled via page frontmatter (defaults to true)."""
+    mock_page.meta["quiz"] = {"auto_submit": False}
     markdown = """
 <?quiz?>
 What is 2+2?
-auto-submit: false
 - [x] 4
 - [ ] 3
 - [ ] 5
@@ -241,7 +235,7 @@ auto-submit: false
 
 
 def test_opt_in_mode_enabled(mock_config):
-    """Test that opt-in mode only processes when quiz: enable is set."""
+    """Test that opt-in mode only processes when quiz.enabled: true is set."""
     plugin = MkDocsQuizPlugin()
     plugin.config = {"enabled_by_default": False}
 
@@ -254,7 +248,7 @@ def test_opt_in_mode_enabled(mock_config):
         use_directory_urls=True,
     )
     page = Page(None, file, mock_config)
-    page.meta = {"quiz": "enable"}
+    page.meta = {"quiz": {"enabled": True}}
 
     markdown = """
 <?quiz?>
@@ -272,7 +266,7 @@ What is 2+2?
 
 
 def test_opt_in_mode_not_enabled(mock_config):
-    """Test that opt-in mode does not process when quiz: enable is not set."""
+    """Test that opt-in mode does not process when quiz.enabled is not set."""
     plugin = MkDocsQuizPlugin()
     plugin.config = {"enabled_by_default": False}
 

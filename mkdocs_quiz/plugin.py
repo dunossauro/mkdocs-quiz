@@ -6,6 +6,7 @@ import logging
 import re
 from importlib import resources as impresources
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 import markdown as md
@@ -38,7 +39,7 @@ except Exception as e:
 # Initialize markdown converter for inline content (questions and answers)
 markdown_converter = md.Markdown(extensions=["extra", "codehilite", "toc"])
 
-# Quiz tag format (new markdown-style syntax):
+# Quiz tag format:
 # <?quiz?>
 # Are you ready?
 # - [x] Yes!
@@ -79,18 +80,16 @@ class MkDocsQuizPlugin(BasePlugin):
         ("enabled_by_default", config_options.Type(bool, default=True)),
         ("auto_number", config_options.Type(bool, default=False)),
         ("question_tag", config_options.Type(str, default="h4")),
+        ("show_correct", config_options.Type(bool, default=True)),
+        ("auto_submit", config_options.Type(bool, default=True)),
+        ("disable_after_submit", config_options.Type(bool, default=True)),
     )
-
-    def __init__(self) -> None:
-        """Initialize the plugin."""
-        super().__init__()
-        self.enabled = True
-        self.dirty = False
 
     def on_env(self, env, config, files):
         """Add our template directory to the Jinja2 environment.
 
         This allows us to override the toc.html partial to add the quiz progress sidebar.
+        Only runs if using mkdocs material
 
         Args:
             env: The Jinja2 environment.
@@ -116,14 +115,119 @@ class MkDocsQuizPlugin(BasePlugin):
 
         return env
 
-    def on_startup(self, *, command: str, dirty: bool) -> None:
-        """Configure the plugin on startup.
+    def _should_process_page(self, page: Page) -> bool:
+        """Check if quizzes should be processed on this page.
 
         Args:
-            command: The MkDocs command being run.
-            dirty: Whether this is a dirty build.
+            page: The current page object.
+
+        Returns:
+            True if quizzes should be processed, False otherwise.
         """
-        self.dirty = dirty
+        enabled_by_default = self.config.get("enabled_by_default", True)
+        quiz_meta = page.meta.get("quiz", None)
+
+        # Handle frontmatter: quiz: { enabled: true/false }
+        if isinstance(quiz_meta, dict):
+            return quiz_meta.get("enabled", enabled_by_default)
+
+        # No page-level override, use plugin default
+        return enabled_by_default
+
+    def _get_quiz_options(self, page: Page) -> dict[str, bool | str]:
+        """Get quiz options from page frontmatter or plugin config.
+
+        Args:
+            page: The current page object.
+
+        Returns:
+            Dictionary with show_correct, auto_submit, disable_after_submit, auto_number, and question_tag options.
+        """
+        # Start with plugin defaults
+        options = {
+            "show_correct": self.config.get("show_correct", True),
+            "auto_submit": self.config.get("auto_submit", True),
+            "disable_after_submit": self.config.get("disable_after_submit", True),
+            "auto_number": self.config.get("auto_number", False),
+            "question_tag": self.config.get("question_tag", "h4"),
+        }
+
+        # Override with page-level settings if present
+        quiz_meta = page.meta.get("quiz")
+        if isinstance(quiz_meta, dict):
+            options.update({k: v for k, v in quiz_meta.items() if k in options})
+
+        return options
+
+    def _parse_quiz_answers(
+        self, quiz_lines: list[str], start_index: int = 1
+    ) -> tuple[list[str], list[str], int]:
+        """Parse quiz answers from quiz lines.
+
+        Args:
+            quiz_lines: The lines of the quiz content.
+            start_index: The index to start parsing from (default: 1, after question).
+
+        Returns:
+            A tuple of (all_answers, correct_answers, content_start_index).
+        """
+        all_answers = []
+        correct_answers = []
+        content_start_index = start_index
+
+        for i, line in enumerate(quiz_lines[start_index:], start=start_index):
+            # Check if this is a checkbox list item: - [x], - [X], - [ ], or - []
+            match = re.match(r"^- \[([xX ]?)\] (.*)$", line)
+            if match:
+                checkbox_content = match.group(1)
+                is_correct = checkbox_content.lower() == "x"
+                answer_text = match.group(2)
+                answer_html = convert_inline_markdown(answer_text)
+                all_answers.append(answer_html)
+                if is_correct:
+                    correct_answers.append(answer_html)
+                content_start_index = i + 1
+            elif not line.strip():
+                # Empty line, continue
+                continue
+            else:
+                # Not a checkbox item and not empty, must be content
+                break
+
+        return all_answers, correct_answers, content_start_index
+
+    def _generate_answer_html(
+        self, all_answers: list[str], correct_answers: list[str], quiz_id: int
+    ) -> tuple[list[str], bool]:
+        """Generate HTML for quiz answers.
+
+        Args:
+            all_answers: List of all answer texts.
+            correct_answers: List of correct answer texts.
+            quiz_id: The unique ID for this quiz.
+
+        Returns:
+            A tuple of (list of answer HTML strings, whether to use checkboxes).
+        """
+        # Determine if multiple choice (checkboxes) or single choice (radio)
+        as_checkboxes = len(correct_answers) > 1
+
+        # Generate answer HTML
+        answer_html_list = []
+        for i, answer in enumerate(all_answers):
+            is_correct = answer in correct_answers
+            input_id = f"quiz-{quiz_id}-{i}"
+            input_type = "checkbox" if as_checkboxes else "radio"
+            correct_attr = "correct" if is_correct else ""
+
+            answer_html = (
+                f'<div><input type="{input_type}" name="answer" value="{i}" '
+                f'id="{input_id}" {correct_attr}>'
+                f'<label for="{input_id}">{answer}</label></div>'
+            )
+            answer_html_list.append(answer_html)
+
+        return answer_html_list, as_checkboxes
 
     def on_page_markdown(
         self, markdown: str, page: Page, config: MkDocsConfig, **kwargs: Any
@@ -140,25 +244,16 @@ class MkDocsQuizPlugin(BasePlugin):
             The processed markdown with quiz HTML.
         """
         # Check if quizzes should be processed on this page
-        enabled_by_default = self.config.get("enabled_by_default", True)
-        quiz_meta = page.meta.get("quiz", None)
-
-        if enabled_by_default:
-            # Opt-out mode: process unless explicitly disabled
-            if quiz_meta == "disable":
-                return markdown
-        else:
-            # Opt-in mode: only process if explicitly enabled
-            if quiz_meta != "enable":
-                return markdown
+        if not self._should_process_page(page):
+            return markdown
 
         matches = re.findall(QUIZ_REGEX, markdown, re.DOTALL)
         quiz_id = 0
-        question_tag = self.config.get("question_tag", "h4")
+        options = self._get_quiz_options(page)
 
         for match in matches:
             try:
-                quiz_html = self._process_quiz(match, quiz_id, question_tag)
+                quiz_html = self._process_quiz(match, quiz_id, options)
                 old_quiz = QUIZ_START_TAG + match + QUIZ_END_TAG
                 markdown = markdown.replace(old_quiz, quiz_html)
                 quiz_id += 1
@@ -168,13 +263,15 @@ class MkDocsQuizPlugin(BasePlugin):
 
         return markdown
 
-    def _process_quiz(self, quiz_content: str, quiz_id: int, question_tag: str = "h4") -> str:
+    def _process_quiz(
+        self, quiz_content: str, quiz_id: int, options: dict[str, bool | str]
+    ) -> str:
         """Process a single quiz and convert it to HTML.
 
         Args:
             quiz_content: The content inside the quiz tags.
             quiz_id: The unique ID for this quiz.
-            question_tag: The HTML tag to use for the question (default: "h4").
+            options: Quiz options (show_correct, auto_submit, disable_after_submit, auto_number, question_tag).
 
         Returns:
             The HTML representation of the quiz.
@@ -197,87 +294,21 @@ class MkDocsQuizPlugin(BasePlugin):
         question = quiz_lines[0]
         question = convert_inline_markdown(question)
 
-        # Parse quiz options (show-correct, auto-submit, disable-after-submit, etc.)
-        # Defaults are now TRUE (opt-out instead of opt-in)
-        show_correct = True
-        auto_submit = True
-        disable_after_submit = True
-        option_lines = []
+        # Get question_tag from options
+        question_tag = options["question_tag"]
 
-        for line in quiz_lines[1:]:
-            if line.startswith("show-correct:"):
-                show_correct_value = line.split("show-correct:", 1)[1].strip().lower()
-                show_correct = show_correct_value not in ["false", "no", "0"]
-                option_lines.append(line)
-            elif line.startswith("auto-submit:"):
-                auto_submit_value = line.split("auto-submit:", 1)[1].strip().lower()
-                auto_submit = auto_submit_value not in ["false", "no", "0"]
-                option_lines.append(line)
-            elif line.startswith("disable-after-submit:"):
-                disable_value = line.split("disable-after-submit:", 1)[1].strip().lower()
-                disable_after_submit = disable_value not in ["false", "no", "0"]
-                option_lines.append(line)
-
-        # Remove option lines from quiz_lines for further processing
-        for option_line in option_lines:
-            if option_line in quiz_lines:
-                quiz_lines.remove(option_line)
-
-        # Parse answers (markdown checkbox syntax: - [x] or - [ ])
-        # Everything after question and options until we stop seeing list items is answers
-        answer_lines = []
-        content_start_index = 1  # Start after question
-
-        for i, line in enumerate(quiz_lines[1:], start=1):
-            # Check if this is a checkbox list item
-            if line.startswith("- [x]") or line.startswith("- [X]") or line.startswith("- [ ]"):
-                answer_lines.append(line)
-                content_start_index = i + 1
-            elif not line.strip():
-                # Empty line, continue
-                continue
-            else:
-                # Not a checkbox item and not empty, must be content
-                break
-
-        # Parse all answers and convert to markdown
-        all_answers = []
-        correct_answers = []
-        for line in answer_lines:
-            if line.startswith("- [x]") or line.startswith("- [X]"):
-                # Correct answer
-                answer_text = line[5:].strip()  # Remove "- [x]" prefix
-                answer_html = convert_inline_markdown(answer_text)
-                all_answers.append(answer_html)
-                correct_answers.append(answer_html)
-            elif line.startswith("- [ ]"):
-                # Incorrect answer
-                answer_text = line[5:].strip()  # Remove "- [ ]" prefix
-                answer_html = convert_inline_markdown(answer_text)
-                all_answers.append(answer_html)
+        # Parse answers
+        all_answers, correct_answers, content_start_index = self._parse_quiz_answers(quiz_lines)
 
         if not all_answers:
             raise ValueError("Quiz must have at least one answer")
         if not correct_answers:
             raise ValueError("Quiz must have at least one correct answer")
 
-        # Determine if multiple choice (checkboxes) or single choice (radio)
-        as_checkboxes = len(correct_answers) > 1
-
         # Generate answer HTML
-        answer_html_list = []
-        for i, answer in enumerate(all_answers):
-            is_correct = answer in correct_answers
-            input_id = f"quiz-{quiz_id}-{i}"
-            input_type = "checkbox" if as_checkboxes else "radio"
-            correct_attr = "correct" if is_correct else ""
-
-            answer_html = (
-                f'<div><input type="{input_type}" name="answer" value="{i}" '
-                f'id="{input_id}" {correct_attr}>'
-                f'<label for="{input_id}">{answer}</label></div>'
-            )
-            answer_html_list.append(answer_html)
+        answer_html_list, as_checkboxes = self._generate_answer_html(
+            all_answers, correct_answers, quiz_id
+        )
 
         # Get quiz content (everything after the last answer)
         content_lines = quiz_lines[content_start_index:]
@@ -289,39 +320,41 @@ class MkDocsQuizPlugin(BasePlugin):
             markdown_converter.reset()
             content_html = markdown_converter.convert(content_text)
 
-        # Build final quiz HTML
-        show_correct_attr = 'data-show-correct="true"' if show_correct else ""
-        auto_submit_attr = 'data-auto-submit="true"' if auto_submit else ""
-        disable_after_submit_attr = (
-            'data-disable-after-submit="true"' if disable_after_submit else ""
-        )
-        # Combine attributes
-        attrs = " ".join(
-            filter(None, [show_correct_attr, auto_submit_attr, disable_after_submit_attr])
-        )
+        # Build data attributes for quiz options
+        data_attrs = []
+        if options["show_correct"]:
+            data_attrs.append('data-show-correct="true"')
+        if options["auto_submit"]:
+            data_attrs.append('data-auto-submit="true"')
+        if options["disable_after_submit"]:
+            data_attrs.append('data-disable-after-submit="true"')
+        attrs = " ".join(data_attrs)
+
         # Hide submit button only if auto-submit is enabled AND it's a single-choice quiz
         # For multiple-choice (checkboxes), always show the submit button
         submit_button = (
             ""
-            if auto_submit and not as_checkboxes
+            if options["auto_submit"] and not as_checkboxes
             else '<button type="submit" class="quiz-button">Submit</button>'
         )
         # Generate quiz ID for linking
         quiz_header_id = f"quiz-{quiz_id}"
-        quiz_html = (
-            f'<div class="quiz" {attrs}>'
-            f'<{question_tag} id="{quiz_header_id}">'
-            f"{question}"
-            f'<a href="#{quiz_header_id}" class="quiz-header-link">#</a>'
-            f"</{question_tag}>"
-            f"<form>"
-            f"<fieldset>{''.join(answer_html_list)}</fieldset>"
-            f'<div class="quiz-feedback hidden"></div>'
-            f"{submit_button}"
-            f"</form>"
-            f'<section class="content hidden">{content_html}</section>'
-            f"</div>"
-        )
+        answers_html = "".join(answer_html_list)
+
+        quiz_html = dedent(f"""
+            <div class="quiz" {attrs}>
+                <{question_tag} id="{quiz_header_id}">
+                    {question}
+                    <a href="#{quiz_header_id}" class="quiz-header-link">#</a>
+                </{question_tag}>
+                <form>
+                    <fieldset>{answers_html}</fieldset>
+                    <div class="quiz-feedback hidden"></div>
+                    {submit_button}
+                </form>
+                <section class="content hidden">{content_html}</section>
+            </div>
+        """).strip()
 
         return quiz_html
 
@@ -340,28 +373,22 @@ class MkDocsQuizPlugin(BasePlugin):
             The HTML with added styles and scripts.
         """
         # Check if quizzes should be processed on this page
-        enabled_by_default = self.config.get("enabled_by_default", True)
-        quiz_meta = page.meta.get("quiz", None)
+        if not self._should_process_page(page):
+            return html
 
-        if enabled_by_default:
-            # Opt-out mode: process unless explicitly disabled
-            if quiz_meta == "disable":
-                return html
-        else:
-            # Opt-in mode: only process if explicitly enabled
-            if quiz_meta != "enable":
-                return html
+        # Get quiz options to check auto_number setting
+        options = self._get_quiz_options(page)
 
         # Add auto-numbering class if enabled
         auto_number_script = ""
-        if self.config.get("auto_number", False):
-            auto_number_script = (
-                '<script type="text/javascript">'
-                'document.addEventListener("DOMContentLoaded", function() {'
-                '  var article = document.querySelector("article") || document.querySelector("main") || document.body;'
-                '  article.classList.add("quiz-auto-number");'
-                "});"
-                "</script>"
-            )
+        if options["auto_number"]:
+            auto_number_script = dedent("""
+                <script type="text/javascript">
+                document.addEventListener("DOMContentLoaded", function() {
+                  var article = document.querySelector("article") || document.querySelector("main") || document.body;
+                  article.classList.add("quiz-auto-number");
+                });
+                </script>
+            """).strip()
 
         return html + style + js_script + auto_number_script
