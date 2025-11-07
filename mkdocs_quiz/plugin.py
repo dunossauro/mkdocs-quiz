@@ -229,6 +229,51 @@ class MkDocsQuizPlugin(BasePlugin):
 
         return answer_html_list, as_checkboxes
 
+    def _mask_code_blocks(self, markdown: str) -> tuple[str, dict[str, str]]:
+        """Temporarily mask fenced code blocks to prevent processing quiz tags inside them.
+
+        Args:
+            markdown: The markdown content.
+
+        Returns:
+            A tuple of (masked markdown, dictionary of placeholders to original content).
+        """
+        placeholders = {}
+        counter = 0
+
+        # Mask fenced code blocks (```...``` or ~~~...~~~)
+        def replace_fenced(match):
+            nonlocal counter
+            placeholder = f"__CODEBLOCK_{counter}__"
+            placeholders[placeholder] = match.group(0)
+            counter += 1
+            return placeholder
+
+        # Match fenced code blocks with optional language specifier
+        # Supports both ``` and ~~~ delimiters
+        markdown = re.sub(
+            r"^```.*?\n.*?^```|^~~~.*?\n.*?^~~~",
+            replace_fenced,
+            markdown,
+            flags=re.MULTILINE | re.DOTALL,
+        )
+
+        return markdown, placeholders
+
+    def _unmask_code_blocks(self, markdown: str, placeholders: dict[str, str]) -> str:
+        """Restore code blocks that were temporarily masked.
+
+        Args:
+            markdown: The markdown content with placeholders.
+            placeholders: Dictionary of placeholders to original content.
+
+        Returns:
+            The markdown with code blocks restored.
+        """
+        for placeholder, original in placeholders.items():
+            markdown = markdown.replace(placeholder, original)
+        return markdown
+
     def on_page_markdown(
         self, markdown: str, page: Page, config: MkDocsConfig, **kwargs: Any
     ) -> str:
@@ -247,7 +292,10 @@ class MkDocsQuizPlugin(BasePlugin):
         if not self._should_process_page(page):
             return markdown
 
-        matches = re.findall(QUIZ_REGEX, markdown, re.DOTALL)
+        # Mask code blocks to prevent processing quiz tags inside them
+        masked_markdown, placeholders = self._mask_code_blocks(markdown)
+
+        matches = re.findall(QUIZ_REGEX, masked_markdown, re.DOTALL)
         quiz_id = 0
         options = self._get_quiz_options(page)
 
@@ -255,17 +303,18 @@ class MkDocsQuizPlugin(BasePlugin):
             try:
                 quiz_html = self._process_quiz(match, quiz_id, options)
                 old_quiz = QUIZ_START_TAG + match + QUIZ_END_TAG
-                markdown = markdown.replace(old_quiz, quiz_html)
+                masked_markdown = masked_markdown.replace(old_quiz, quiz_html)
                 quiz_id += 1
             except Exception as e:
                 log.error(f"Failed to process quiz {quiz_id}: {e}")
                 continue
 
+        # Restore code blocks
+        markdown = self._unmask_code_blocks(masked_markdown, placeholders)
+
         return markdown
 
-    def _process_quiz(
-        self, quiz_content: str, quiz_id: int, options: dict[str, bool | str]
-    ) -> str:
+    def _process_quiz(self, quiz_content: str, quiz_id: int, options: dict[str, bool | str]) -> str:
         """Process a single quiz and convert it to HTML.
 
         Args:
