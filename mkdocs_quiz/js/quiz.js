@@ -91,11 +91,86 @@ const quizTracker = {
         detail: this.getProgress(),
       })
     );
+    // Update sidebar if it exists
+    this.updateSidebar();
+  },
+
+  updateSidebar: function () {
+    const sidebar = document.getElementById("quiz-progress-sidebar");
+    if (sidebar) {
+      const progress = this.getProgress();
+      sidebar.querySelector(".quiz-progress-answered").textContent = progress.answered;
+      sidebar.querySelector(".quiz-progress-total").textContent = progress.total;
+      sidebar.querySelector(".quiz-progress-percentage").textContent = progress.percentage + "%";
+      sidebar.querySelector(".quiz-progress-score").textContent = progress.correct;
+      sidebar.querySelector(".quiz-progress-score-percentage").textContent = progress.score + "%";
+
+      // Update progress bar
+      const progressBar = sidebar.querySelector(".quiz-progress-bar-fill");
+      if (progressBar) {
+        progressBar.style.width = progress.percentage + "%";
+      }
+    }
+  },
+
+  createSidebar: function () {
+    // Only create sidebar if there are multiple quizzes
+    if (this.totalQuizzes <= 1) {
+      return;
+    }
+
+    const progress = this.getProgress();
+    const sidebar = document.createElement("div");
+    sidebar.id = "quiz-progress-sidebar";
+    sidebar.className = "quiz-progress-sidebar";
+    sidebar.innerHTML = `
+      <div class="quiz-progress-header">Quiz Progress</div>
+      <div class="quiz-progress-stats">
+        <div class="quiz-progress-stat">
+          <div class="quiz-progress-label">Answered</div>
+          <div class="quiz-progress-value">
+            <span class="quiz-progress-answered">${progress.answered}</span> /
+            <span class="quiz-progress-total">${progress.total}</span>
+          </div>
+        </div>
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-bar-fill" style="width: ${progress.percentage}%"></div>
+        </div>
+        <div class="quiz-progress-percentage-text">
+          <span class="quiz-progress-percentage">${progress.percentage}%</span> Complete
+        </div>
+        <div class="quiz-progress-stat">
+          <div class="quiz-progress-label">Correct</div>
+          <div class="quiz-progress-value">
+            <span class="quiz-progress-score">${progress.correct}</span> /
+            <span class="quiz-progress-total">${progress.total}</span>
+            (<span class="quiz-progress-score-percentage">${progress.score}%</span>)
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Try to find the best place to insert the sidebar
+    const article = document.querySelector("article") || document.querySelector("main");
+    if (article) {
+      article.appendChild(sidebar);
+    } else {
+      document.body.appendChild(sidebar);
+    }
   },
 };
 
 // Initialize tracker
 quizTracker.init();
+
+// Create sidebar after page loads
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    quizTracker.createSidebar();
+  });
+} else {
+  quizTracker.createSidebar();
+}
 
 document.querySelectorAll(".quiz").forEach((quiz) => {
   let form = quiz.querySelector("form");
