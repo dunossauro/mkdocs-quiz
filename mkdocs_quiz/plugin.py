@@ -241,9 +241,14 @@ class MkDocsQuizPlugin(BasePlugin):
             if auto_submit
             else '<button type="submit" class="quiz-button">Submit</button>'
         )
+        # Generate quiz ID for linking
+        quiz_header_id = f"quiz-{quiz_id}"
         quiz_html = (
             f'<div class="quiz" {attrs}>'
-            f"<h3>{question}</h3>"
+            f'<h3 id="{quiz_header_id}">'
+            f'{question}'
+            f'<a href="#{quiz_header_id}" class="quiz-header-link">#</a>'
+            f"</h3>"
             f"<form>"
             f"<fieldset>{''.join(answer_html_list)}</fieldset>"
             f"{submit_button}"

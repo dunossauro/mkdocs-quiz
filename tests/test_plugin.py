@@ -294,6 +294,32 @@ answer: 3
     assert "<?quiz?>" in result
 
 
+def test_quiz_header_ids(plugin, mock_page, mock_config):
+    """Test that quiz headers have IDs with links."""
+    markdown = """
+<?quiz?>
+question: First question?
+answer-correct: Yes
+answer: No
+<?/quiz?>
+
+<?quiz?>
+question: Second question?
+answer-correct: Yes
+answer: No
+<?/quiz?>
+"""
+
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+
+    # Check that both quiz headers have IDs
+    assert 'id="quiz-0"' in result
+    assert 'id="quiz-1"' in result
+    # Check that header links are present
+    assert 'href="#quiz-0"' in result
+    assert 'href="#quiz-1"' in result
+
+
 def test_invalid_quiz_format(plugin, mock_page, mock_config):
     """Test that invalid quiz format is handled gracefully."""
     markdown = """

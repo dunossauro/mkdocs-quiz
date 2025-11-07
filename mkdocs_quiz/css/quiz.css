@@ -56,3 +56,19 @@ input[type="radio"].wrong {
 .content {
   margin: 10px;
 }
+
+/* Quiz header link styling */
+.quiz h3 {
+  position: relative;
+}
+.quiz-header-link {
+  opacity: 0;
+  margin-left: 0.5rem;
+  font-size: 0.8em;
+  text-decoration: none;
+  color: var(--md-default-fg-color--light, #888);
+  transition: opacity 0.2s;
+}
+.quiz h3:hover .quiz-header-link {
+  opacity: 1;
+}
