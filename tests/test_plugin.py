@@ -171,6 +171,28 @@ answer: 5
     assert '<section class="content hidden"></section>' in result
 
 
+def test_markdown_in_questions_and_answers(plugin, mock_page, mock_config):
+    """Test that markdown is parsed in questions and answers."""
+    markdown = """
+<?quiz?>
+question: What is **bold** text?
+answer-correct: Text with `<strong>` tags
+answer: Text with *emphasis*
+answer: Normal text
+content:
+<p>Correct!</p>
+<?/quiz?>
+"""
+
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+
+    # Check that markdown in question is converted
+    assert "<strong>bold</strong>" in result
+    # Check that markdown in answers is converted
+    assert "<code>&lt;strong&gt;</code>" in result
+    assert "<em>emphasis</em>" in result
+
+
 def test_invalid_quiz_format(plugin, mock_page, mock_config):
     """Test that invalid quiz format is handled gracefully."""
     markdown = """

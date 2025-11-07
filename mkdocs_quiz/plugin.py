@@ -7,6 +7,7 @@ import re
 from importlib import resources as impresources
 from typing import Any
 
+import markdown as md
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.plugins import BasePlugin
 from mkdocs.structure.files import Files
@@ -32,6 +33,9 @@ except Exception as e:
     style = ""
     js_script = ""
 
+# Initialize markdown converter for inline content (questions and answers)
+markdown_converter = md.Markdown(extensions=["extra", "codehilite", "toc"])
+
 # Quiz tag format:
 # <?quiz?>
 # question: Are you ready?
@@ -45,6 +49,24 @@ except Exception as e:
 QUIZ_START_TAG = "<?quiz?>"
 QUIZ_END_TAG = "<?/quiz?>"
 QUIZ_REGEX = r"<\?quiz\?>(.*?)<\?/quiz\?>"
+
+
+def convert_inline_markdown(text: str) -> str:
+    """Convert markdown to HTML for inline content (questions/answers).
+
+    Args:
+        text: The markdown text to convert.
+
+    Returns:
+        The HTML string with wrapping <p> tags removed.
+    """
+    # Reset the converter state
+    markdown_converter.reset()
+    html = markdown_converter.convert(text)
+    # Remove wrapping <p> tags for inline content
+    if html.startswith("<p>") and html.endswith("</p>"):
+        html = html[3:-4]
+    return html
 
 
 class MkDocsQuizPlugin(BasePlugin):
@@ -126,6 +148,7 @@ class MkDocsQuizPlugin(BasePlugin):
         if not quiz_lines[0].startswith("question: "):
             raise ValueError("Quiz must start with 'question: '")
         question = quiz_lines[0].split("question: ", 1)[1]
+        question = convert_inline_markdown(question)
 
         # Find content separator (optional)
         if "content:" in quiz_lines:
@@ -135,22 +158,21 @@ class MkDocsQuizPlugin(BasePlugin):
             # No content section, all lines after question are answers
             answer_lines = quiz_lines[1:]
             content_index = len(quiz_lines)
-        correct_answers = [
-            line.split("answer-correct: ", 1)[1]
-            for line in answer_lines
-            if line.startswith("answer-correct: ")
-        ]
+        # Parse all answers and convert to markdown
+        all_answers = []
+        correct_answers = []
+        for line in answer_lines:
+            if line.startswith("answer-correct: "):
+                answer_text = line.split("answer-correct: ", 1)[1]
+                answer_html = convert_inline_markdown(answer_text)
+                all_answers.append(answer_html)
+                correct_answers.append(answer_html)
+            elif line.startswith("answer: "):
+                answer_text = line.split("answer: ", 1)[1]
+                all_answers.append(convert_inline_markdown(answer_text))
 
         # Determine if multiple choice (checkboxes) or single choice (radio)
         as_checkboxes = len(correct_answers) > 1
-
-        # Parse all answers
-        all_answers = []
-        for line in answer_lines:
-            if line.startswith("answer-correct: "):
-                all_answers.append(line.split("answer-correct: ", 1)[1])
-            elif line.startswith("answer: "):
-                all_answers.append(line.split("answer: ", 1)[1])
 
         # Generate answer HTML
         answer_html_list = []
