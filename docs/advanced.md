@@ -65,22 +65,9 @@ The plugin works with any MkDocs theme, but has special integration with Materia
 - Responsive design
 - Dark mode support
 
-## Browser Compatibility
-
-The plugin uses modern JavaScript features and works in:
-
-- Chrome/Edge 90+
-- Firefox 88+
-- Safari 14+
-
-Features used:
-- `localStorage` for progress tracking
-- ES6+ JavaScript
-- CSS custom properties
-
 ## Migration from Old Syntax
 
-If you have quizzes using the old syntax (`question:`, `answer-correct:`, etc.), use the migration CLI tool:
+If you have quizzes using the old mkdocs-quiz syntax (`question:`, `answer-correct:`, etc.), use the migration CLI tool to update your docs:
 
 ```bash
 # Preview changes
@@ -115,88 +102,3 @@ What is 2+2?
 Correct!
 <?/quiz?>
 ```
-
-## Performance
-
-The plugin is designed to be fast:
-
-- CSS/JS injected inline (no external requests)
-- Minimal JavaScript (< 20KB)
-- No jQuery or heavy dependencies
-- Quiz processing happens during build (not runtime)
-
-## Security
-
-- All user input is validated
-- No eval() or dangerous JavaScript
-- Content is properly escaped
-- LocalStorage is scoped per-page
-
-## Accessibility
-
-- Proper ARIA labels
-- Keyboard navigation support
-- Screen reader compatible
-- Semantic HTML structure
-- Focus management
-
-## Best Practices
-
-### Content Organization
-
-- Group related quizzes together
-- Use headings to separate quiz sections
-- Provide context before quizzes
-
-### Question Writing
-
-- Keep questions concise and clear
-- Avoid trick questions
-- Provide meaningful feedback in content sections
-- Test your quizzes!
-
-### Configuration
-
-- Start with defaults
-- Only override when needed
-- Document page-level overrides
-- Be consistent across your site
-
-### Performance
-
-- Don't put too many quizzes on one page (< 20 recommended)
-- Optimize images in content sections
-- Use lazy loading for heavy content
-
-## Troubleshooting
-
-### Quizzes not appearing
-
-1. Check plugin is enabled in `mkdocs.yml`
-2. Verify quiz syntax is correct
-3. Check browser console for errors
-4. Ensure page isn't disabled with `quiz: {enabled: false}`
-
-### Progress not saving
-
-- Check localStorage is enabled in browser
-- Verify browser compatibility
-- Check for localStorage quota exceeded
-
-### Styling issues
-
-- Check for CSS conflicts with your theme
-- Inspect element to see applied styles
-- Try a different theme to isolate issue
-
-### Build errors
-
-- Run `mkdocs build --verbose` for details
-- Check quiz syntax carefully
-- Verify all required dependencies installed
-
-## See Also
-
-- [Configuration](configuration.md)
-- [Examples](examples/index.md)
-- [GitHub Issues](https://github.com/ewels/mkdocs-quiz/issues)

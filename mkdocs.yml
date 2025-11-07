@@ -44,15 +44,11 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: index.md
-  - Getting Started:
-    - Installation: installation.md
-    - Quick Start: quick-start.md
-    - Configuration: configuration.md
-  - Examples:
-    - Quiz Examples: examples/index.md
-    - Page Options: examples/page-options.md
-    - Disabled Page: examples/disable.md
-  - Advanced: advanced.md
-  - Contributing: CONTRIBUTING.md
-  - Changelog: CHANGELOG.md
+  - Overview: index.md
+  - installation.md
+  - quick-start.md
+  - examples.md
+  - configuration.md
+  - advanced.md
+  - Contributing: contributing.md
+  - CHANGELOG.md

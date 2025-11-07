@@ -232,6 +232,9 @@ class MkDocsQuizPlugin(BasePlugin):
     def _mask_code_blocks(self, markdown: str) -> tuple[str, dict[str, str]]:
         """Temporarily mask fenced code blocks to prevent processing quiz tags inside them.
 
+        Only masks code blocks that are NOT inside quiz tags, to avoid breaking quizzes
+        that contain code examples in their content sections.
+
         Args:
             markdown: The markdown content.
 
@@ -241,18 +244,32 @@ class MkDocsQuizPlugin(BasePlugin):
         placeholders = {}
         counter = 0
 
+        # Find all quiz blocks first
+        quiz_ranges = []
+        for match in re.finditer(QUIZ_REGEX, markdown, re.DOTALL):
+            quiz_ranges.append((match.start(), match.end()))
+
         # Mask fenced code blocks (```...``` or ~~~...~~~)
         def replace_fenced(match):
             nonlocal counter
+            # Check if this code block is inside a quiz
+            match_start = match.start()
+            match_end = match.end()
+            for quiz_start, quiz_end in quiz_ranges:
+                if quiz_start < match_start < quiz_end or quiz_start < match_end < quiz_end:
+                    # Code block is inside a quiz, don't mask it
+                    return match.group(0)
+
+            # Code block is outside quizzes, mask it
             placeholder = f"__CODEBLOCK_{counter}__"
             placeholders[placeholder] = match.group(0)
             counter += 1
             return placeholder
 
         # Match fenced code blocks with optional language specifier
-        # Supports both ``` and ~~~ delimiters
+        # Supports ``` and ~~~ delimiters (3 or more), with optional indentation
         markdown = re.sub(
-            r"^```.*?\n.*?^```|^~~~.*?\n.*?^~~~",
+            r"^[ \t]*`{3,}.*?\n.*?^[ \t]*`{3,}|^[ \t]*~{3,}.*?\n.*?^[ \t]*~{3,}",
             replace_fenced,
             markdown,
             flags=re.MULTILINE | re.DOTALL,
@@ -295,18 +312,48 @@ class MkDocsQuizPlugin(BasePlugin):
         # Mask code blocks to prevent processing quiz tags inside them
         masked_markdown, placeholders = self._mask_code_blocks(markdown)
 
-        matches = re.findall(QUIZ_REGEX, masked_markdown, re.DOTALL)
+        # Process quizzes and replace with HTML
+        # Must handle indentation carefully to work with content tabs
         quiz_id = 0
         options = self._get_quiz_options(page)
 
-        for match in matches:
+        # Process in reverse to maintain string positions
+        matches = list(re.finditer(QUIZ_REGEX, masked_markdown, re.DOTALL))
+        for match in reversed(matches):
             try:
-                quiz_html = self._process_quiz(match, quiz_id, options)
-                old_quiz = QUIZ_START_TAG + match + QUIZ_END_TAG
-                masked_markdown = masked_markdown.replace(old_quiz, quiz_html)
+                quiz_html = self._process_quiz(match.group(1), quiz_id, options)
+
+                # Find the line start (including indentation) before the quiz
+                start_pos = match.start()
+                line_start = masked_markdown.rfind('\n', 0, start_pos)
+                line_start = 0 if line_start == -1 else line_start + 1
+
+                # Get indentation
+                indent = masked_markdown[line_start:start_pos]
+
+                # Check if quiz is indented (e.g., inside content tabs)
+                if indent and indent.isspace():
+                    # Quiz is indented - wrap in markdown="block" div to allow HTML in indented context
+                    # This allows raw HTML to work inside content tabs
+                    wrapped = f'<div markdown="block">\n\n{quiz_html}\n\n</div>'
+                    # Keep the same indentation
+                    masked_markdown = (
+                        masked_markdown[:match.start()] +
+                        wrapped +
+                        masked_markdown[match.end():]
+                    )
+                else:
+                    # Quiz is not indented, no wrapper needed
+                    masked_markdown = (
+                        masked_markdown[:match.start()] +
+                        quiz_html +
+                        masked_markdown[match.end():]
+                    )
+
                 quiz_id += 1
             except Exception as e:
                 log.error(f"Failed to process quiz {quiz_id}: {e}")
+                quiz_id += 1
                 continue
 
         # Restore code blocks
@@ -328,6 +375,9 @@ class MkDocsQuizPlugin(BasePlugin):
         Raises:
             ValueError: If the quiz format is invalid.
         """
+        # Dedent the quiz content to handle indented quizzes (e.g., in content tabs)
+        quiz_content = dedent(quiz_content)
+
         quiz_lines = quiz_content.splitlines()
 
         # Remove empty lines at start and end

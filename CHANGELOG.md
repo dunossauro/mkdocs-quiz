@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2025-01-07
+## [1.0.0] - 2025-11-08
+
+v1.0.0 of mkdocs-quiz is a complete rewrite of the original plugin.
+It modernises the codebase, changes the quiz markdown syntax, and adds a bunch of new features.
 
 ### 🚨 Breaking Changes
 
@@ -113,84 +116,7 @@ plugins:
   - Automatically hidden on mobile/small screens
 - **Custom event dispatching** - Emits `quizProgressUpdate` event for custom integrations
 
-### 🔧 Changed
-
-- Question heading defaults to `h3` but can now be customized via `question_tag` config option
-- Content section now supports full markdown conversion instead of raw HTML pass-through
-- Quiz options (`show-correct`, `auto-submit`, `disable-after-submit`) now default to `true`
-- Submit button is hidden after submission (Try Again button appears instead)
-- CSS uses theme color variables when available (`--md-primary-fg-color`, etc.)
-
-### 🐛 Fixed
-
-- Improved error handling for malformed quiz blocks
-- Better empty line handling in quiz content
-- Fixed markdown parsing for inline code and special characters
-- Consistent behavior across different MkDocs themes
-
-### 📚 Documentation
-
-- Updated README with new syntax examples
-- Added migration guide and script
-- Documented all new configuration options
-- Added examples for all new features
-
-### 🏗️ Technical
-
-- Migrated to modern Python markdown library usage
-- Improved quiz parsing logic for better maintainability
-- Added CSS counters for auto-numbering
-- Implemented localStorage API for persistence
-- Enhanced JavaScript event handling
-- Better separation of concerns (parsing vs rendering)
-
-### 🧪 Testing
-
-- All tests updated for new syntax
-- Added tests for new features:
-  - Markdown in questions/answers
-  - Optional content section
-  - New default behaviors
-  - Progress tracking
-  - Quiz options (show-correct, auto-submit, disable-after-submit)
-- 15 passing tests with 100% coverage
-
-## [1.0.0] - 2025-01-07
-
-### Added
-
-- Modernized codebase with Python 3.8+ support
-- Migrated from deprecated `distutils` to modern `pyproject.toml` (PEP 517/518)
-- Added comprehensive type hints throughout the codebase
-- Improved error handling and logging
-- Added proper package structure with `__init__.py` files
-- Switched to Ruff for Python formatting and linting (faster than Black + Flake8)
-- Added Prettier for JavaScript and CSS formatting
-- Added comprehensive test suite with pytest (8 tests)
-- Added pre-commit hooks for automatic code quality checks
-- Automated PyPI publishing via GitHub Actions with trusted publishing
-- Added GitHub Actions CI for testing on Python 3.8-3.12
-- Created dedicated CHANGELOG.md file
-- Created comprehensive CONTRIBUTING.md guide
-
-### Changed
-
-- Better code organization and documentation
-- Refactored quiz processing into separate methods for clarity
-- Improved README.md to be more user-focused
-- Updated all dependencies to latest versions
-
-### Removed
-
-- Removed deprecated `setup.py` (no backwards compatibility needed)
-- Removed `Makefile` (pre-commit handles everything)
-- Removed `distutils` dependency
-
-## Historical Releases
-
-### Pre-1.0.0
+## Pre-1.0.0
 
 Previous versions by original author [Sebastian Jörz](https://github.com/skyface753).
-See original repository history for details.
-
-[1.0.0]: https://github.com/ewels/mkdocs-quiz/releases/tag/v1.0.0
+See original GitHub history for details: https://github.com/skyface753/mkdocs-quiz/
