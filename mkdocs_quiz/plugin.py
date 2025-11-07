@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from importlib import resources as impresources
+from pathlib import Path
 from typing import Any
 
 import markdown as md
@@ -77,7 +78,7 @@ class MkDocsQuizPlugin(BasePlugin):
     config_scheme = (
         ("enabled_by_default", config_options.Type(bool, default=True)),
         ("auto_number", config_options.Type(bool, default=False)),
-        ("question_tag", config_options.Type(str, default="h3")),
+        ("question_tag", config_options.Type(str, default="h4")),
     )
 
     def __init__(self) -> None:
@@ -85,6 +86,35 @@ class MkDocsQuizPlugin(BasePlugin):
         super().__init__()
         self.enabled = True
         self.dirty = False
+
+    def on_env(self, env, config, files):
+        """Add our template directory to the Jinja2 environment.
+
+        This allows us to override the toc.html partial to add the quiz progress sidebar.
+
+        Args:
+            env: The Jinja2 environment.
+            config: The MkDocs config object.
+            files: The files collection.
+
+        Returns:
+            The modified Jinja2 environment.
+        """
+        if config.theme.name == "material":
+            from jinja2 import ChoiceLoader, FileSystemLoader
+
+            # Get the path to our overrides directory
+            overrides_dir = Path(__file__).parent / "overrides"
+
+            # Add our templates with HIGHER priority so they're found first
+            # The ! prefix in our template will then load the next one in the chain
+            env.loader = ChoiceLoader([FileSystemLoader(str(overrides_dir)), env.loader])
+
+            log.info(
+                "mkdocs-quiz: Added template overrides to integrate quiz progress sidebar into TOC"
+            )
+
+        return env
 
     def on_startup(self, *, command: str, dirty: bool) -> None:
         """Configure the plugin on startup.
@@ -124,7 +154,7 @@ class MkDocsQuizPlugin(BasePlugin):
 
         matches = re.findall(QUIZ_REGEX, markdown, re.DOTALL)
         quiz_id = 0
-        question_tag = self.config.get("question_tag", "h3")
+        question_tag = self.config.get("question_tag", "h4")
 
         for match in matches:
             try:
@@ -138,13 +168,13 @@ class MkDocsQuizPlugin(BasePlugin):
 
         return markdown
 
-    def _process_quiz(self, quiz_content: str, quiz_id: int, question_tag: str = "h3") -> str:
+    def _process_quiz(self, quiz_content: str, quiz_id: int, question_tag: str = "h4") -> str:
         """Process a single quiz and convert it to HTML.
 
         Args:
             quiz_content: The content inside the quiz tags.
             quiz_id: The unique ID for this quiz.
-            question_tag: The HTML tag to use for the question (default: "h3").
+            question_tag: The HTML tag to use for the question (default: "h4").
 
         Returns:
             The HTML representation of the quiz.
@@ -262,15 +292,18 @@ class MkDocsQuizPlugin(BasePlugin):
         # Build final quiz HTML
         show_correct_attr = 'data-show-correct="true"' if show_correct else ""
         auto_submit_attr = 'data-auto-submit="true"' if auto_submit else ""
-        disable_after_submit_attr = 'data-disable-after-submit="true"' if disable_after_submit else ""
+        disable_after_submit_attr = (
+            'data-disable-after-submit="true"' if disable_after_submit else ""
+        )
         # Combine attributes
         attrs = " ".join(
             filter(None, [show_correct_attr, auto_submit_attr, disable_after_submit_attr])
         )
-        # Hide submit button if auto-submit is enabled
+        # Hide submit button only if auto-submit is enabled AND it's a single-choice quiz
+        # For multiple-choice (checkboxes), always show the submit button
         submit_button = (
             ""
-            if auto_submit
+            if auto_submit and not as_checkboxes
             else '<button type="submit" class="quiz-button">Submit</button>'
         )
         # Generate quiz ID for linking
@@ -278,11 +311,12 @@ class MkDocsQuizPlugin(BasePlugin):
         quiz_html = (
             f'<div class="quiz" {attrs}>'
             f'<{question_tag} id="{quiz_header_id}">'
-            f'{question}'
+            f"{question}"
             f'<a href="#{quiz_header_id}" class="quiz-header-link">#</a>'
             f"</{question_tag}>"
             f"<form>"
             f"<fieldset>{''.join(answer_html_list)}</fieldset>"
+            f'<div class="quiz-feedback hidden"></div>'
             f"{submit_button}"
             f"</form>"
             f'<section class="content hidden">{content_html}</section>'

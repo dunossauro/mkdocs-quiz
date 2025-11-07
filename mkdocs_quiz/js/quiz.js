@@ -89,7 +89,7 @@ const quizTracker = {
     window.dispatchEvent(
       new CustomEvent("quizProgressUpdate", {
         detail: this.getProgress(),
-      })
+      }),
     );
     // Update sidebar if it exists
     this.updateSidebar();
@@ -120,42 +120,60 @@ const quizTracker = {
     }
 
     const progress = this.getProgress();
-    const sidebar = document.createElement("div");
-    sidebar.id = "quiz-progress-sidebar";
-    sidebar.className = "quiz-progress-sidebar";
-    sidebar.innerHTML = `
-      <div class="quiz-progress-header">Quiz Progress</div>
-      <div class="quiz-progress-stats">
-        <div class="quiz-progress-stat">
-          <div class="quiz-progress-label">Answered</div>
-          <div class="quiz-progress-value">
-            <span class="quiz-progress-answered">${progress.answered}</span> /
-            <span class="quiz-progress-total">${progress.total}</span>
+
+    // Create nav element matching Material's TOC structure
+    const nav = document.createElement("nav");
+    nav.id = "quiz-progress-sidebar";
+    nav.className = "md-nav md-nav--secondary";
+    nav.setAttribute("aria-label", "Quiz Progress");
+
+    nav.innerHTML = `
+      <label class="md-nav__title" for="__quiz-progress">
+        <span class="md-nav__icon md-icon"></span>
+        Quiz Progress
+      </label>
+      <ul class="md-nav__list" data-md-component="quiz-progress">
+        <li class="md-nav__item">
+          <div class="md-nav__link">
+            <span class="md-ellipsis">
+              Answered: <span class="quiz-progress-answered">${progress.answered}</span> / <span class="quiz-progress-total">${progress.total}</span>
+            </span>
           </div>
-        </div>
-        <div class="quiz-progress-bar">
-          <div class="quiz-progress-bar-fill" style="width: ${progress.percentage}%"></div>
-        </div>
-        <div class="quiz-progress-percentage-text">
-          <span class="quiz-progress-percentage">${progress.percentage}%</span> Complete
-        </div>
-        <div class="quiz-progress-stat">
-          <div class="quiz-progress-label">Correct</div>
-          <div class="quiz-progress-value">
-            <span class="quiz-progress-score">${progress.correct}</span> /
-            <span class="quiz-progress-total">${progress.total}</span>
-            (<span class="quiz-progress-score-percentage">${progress.score}%</span>)
+        </li>
+        <li class="md-nav__item">
+          <div class="md-nav__link">
+            <div class="quiz-progress-bar">
+              <div class="quiz-progress-bar-fill" style="width: ${progress.percentage}%"></div>
+            </div>
           </div>
-        </div>
-      </div>
+        </li>
+        <li class="md-nav__item">
+          <div class="md-nav__link">
+            <span class="md-ellipsis">
+              <span class="quiz-progress-percentage">${progress.percentage}%</span> Complete
+            </span>
+          </div>
+        </li>
+        <li class="md-nav__item">
+          <div class="md-nav__link">
+            <span class="md-ellipsis">
+              Correct: <span class="quiz-progress-score">${progress.correct}</span> / <span class="quiz-progress-total">${progress.total}</span> (<span class="quiz-progress-score-percentage">${progress.score}%</span>)
+            </span>
+          </div>
+        </li>
+      </ul>
     `;
 
-    // Try to find the best place to insert the sidebar
-    const article = document.querySelector("article") || document.querySelector("main");
-    if (article) {
-      article.appendChild(sidebar);
+    // Replace the placeholder nav element (created by overridden main.html)
+    // Fall back to article/body if placeholder doesn't exist
+    const placeholder = document.getElementById("quiz-progress-sidebar-placeholder");
+    if (placeholder && placeholder.parentNode) {
+      // Replace the placeholder with the actual quiz progress sidebar
+      placeholder.parentNode.replaceChild(nav, placeholder);
     } else {
-      document.body.appendChild(sidebar);
+      // Fallback: append to article/body if no placeholder found
+      const container = document.querySelector("article") || document.querySelector("main") || document.body;
+      container.appendChild(nav);
     }
   },
 };
@@ -176,6 +194,7 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
   let form = quiz.querySelector("form");
   let fieldset = form.querySelector("fieldset");
   let submitButton = form.querySelector('button[type="submit"]');
+  let feedbackDiv = form.querySelector(".quiz-feedback");
 
   // Get quiz ID from header
   const header = quiz.querySelector("h1, h2, h3, h4, h5, h6");
@@ -216,6 +235,10 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
     // Hide content section
     let section = quiz.querySelector("section");
     section.classList.add("hidden");
+    // Hide feedback message
+    feedbackDiv.classList.add("hidden");
+    feedbackDiv.classList.remove("correct", "incorrect");
+    feedbackDiv.textContent = "";
     // Show submit button, hide reset button
     if (submitButton) {
       submitButton.disabled = false;
@@ -253,6 +276,10 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
           allAnswers[i].parentElement.classList.add("wrong");
         }
       }
+      // Show correct feedback
+      feedbackDiv.classList.remove("hidden", "incorrect");
+      feedbackDiv.classList.add("correct");
+      feedbackDiv.textContent = "Correct answer!";
     } else {
       section.classList.add("hidden");
       resetFieldset(fieldset);
@@ -270,6 +297,12 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
           correctAnswers[i].parentElement.classList.add("correct");
         }
       }
+      // Show incorrect feedback
+      feedbackDiv.classList.remove("hidden", "correct");
+      feedbackDiv.classList.add("incorrect");
+      // Only show "Please try again" if the quiz is not disabled after submission
+      const canRetry = !quiz.hasAttribute("data-disable-after-submit");
+      feedbackDiv.textContent = canRetry ? "Incorrect answer. Please try again." : "Incorrect answer.";
     }
 
     // Update tracker

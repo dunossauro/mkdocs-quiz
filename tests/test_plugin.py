@@ -76,6 +76,8 @@ What is 2+2?
     assert "What is 2+2?" in result
     assert 'type="radio"' in result
     assert "correct" in result
+    # Single choice with auto-submit (default) should NOT have a submit button
+    assert 'type="submit"' not in result
 
 
 def test_multiple_choice_quiz(plugin, mock_page, mock_config):
@@ -96,6 +98,9 @@ Which are even numbers?
     assert "quiz" in result
     assert "Which are even numbers?" in result
     assert 'type="checkbox"' in result
+    # Multiple choice should always have a submit button (even with auto-submit enabled by default)
+    assert 'type="submit"' in result
+    assert "Submit" in result
 
 
 def test_multiple_quizzes(plugin, mock_page, mock_config):

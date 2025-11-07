@@ -133,7 +133,9 @@ def migrate_file(file_path: Path, dry_run: bool = False) -> Tuple[int, bool]:
 @app.command()
 def migrate(
     directory: str = typer.Argument("docs", help="Directory to search for markdown files"),
-    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Show what would be changed without modifying files"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", "-n", help="Show what would be changed without modifying files"
+    ),
 ) -> None:
     """Migrate quiz blocks from old syntax to new markdown-style syntax.
 
@@ -204,6 +206,7 @@ def migrate(
 def callback():
     """Required to keep subcommand even when there's only one for now."""
     pass
+
 
 if __name__ == "__main__":
     app()

@@ -3,12 +3,10 @@
 ## Single choice
 
 <?quiz?>
-
-question: Are you ready?
-answer-correct: Yes!
-answer: No!
-answer: Maybe!
-content:
+Are you ready?
+- [x] Yes!
+- [ ] No!
+- [ ] Maybe!
 
 <h2>Provide some additional content</h2>
 <?/quiz?>
@@ -16,12 +14,10 @@ content:
 ## Multiple choice
 
 <?quiz?>
-
-question: Are you ready?
-answer-correct: Yes!
-answer: No!
-answer-correct: Maybe!
-content:
+Which of these are correct?
+- [x] Yes!
+- [ ] No!
+- [x] Maybe!
 
 <h2>Provide some additional content</h2>
 <?/quiz?>

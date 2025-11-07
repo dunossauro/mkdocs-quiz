@@ -1,0 +1,30 @@
+<!--
+  MkDocs Quiz Plugin - Extended Main Template
+
+  This template extends the default MkDocs Material main.html to add
+  a quiz progress sidebar in the TOC sidebar.
+-->
+
+{% extends "base.html" %}
+
+{% block site_nav %}
+  <!-- Include the original sidebar navigation -->
+  {{ super() }}
+
+  <!-- Move the quiz progress placeholder into the TOC sidebar -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Find the placeholder and TOC sidebar
+      const placeholder = document.getElementById('quiz-progress-sidebar-placeholder');
+      const tocSidebar = document.querySelector('.md-sidebar--secondary .md-sidebar__inner');
+
+      if (placeholder && tocSidebar && tocSidebar.firstChild) {
+        // Move placeholder to the top of the TOC sidebar
+        tocSidebar.insertBefore(placeholder, tocSidebar.firstChild);
+      }
+    });
+  </script>
+
+  <!-- Quiz progress sidebar placeholder - will be moved to TOC by script above -->
+  <nav id="quiz-progress-sidebar-placeholder"></nav>
+{% endblock %}

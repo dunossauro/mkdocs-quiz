@@ -20,12 +20,33 @@ form button {
   text-decoration: none;
   display: inline-block;
   font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
 }
 
-.wrong label {
+form button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+form button:disabled {
+  background-color: var(--md-default-fg-color--lighter, #ccc);
+  color: var(--md-default-fg-color--light, #666);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.wrong label,
+.wrong label *,
+label.correct,
+label.correct * {
   color: red;
 }
-.correct label {
+.correct label,
+.correct label *,
+label.wrong,
+label.wrong * {
   color: green;
 }
 
@@ -41,12 +62,6 @@ fieldset label {
   margin: 0 10px;
 }
 
-label.correct {
-  color: green;
-}
-label.wrong {
-  color: red;
-}
 input[type="radio"].correct {
   accent-color: green;
 }
@@ -55,6 +70,26 @@ input[type="radio"].wrong {
 }
 .content {
   margin: 10px;
+}
+
+/* Quiz feedback message */
+.quiz-feedback {
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.quiz-feedback.correct {
+  background-color: rgba(0, 128, 0, 0.1);
+  border: 1px solid rgba(0, 128, 0, 0.3);
+  color: green;
+}
+
+.quiz-feedback.incorrect {
+  background-color: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: red;
 }
 
 /* Quiz header link styling */
@@ -100,77 +135,23 @@ input[type="radio"].wrong {
   font-weight: bold;
 }
 
-/* Progress sidebar */
-.quiz-progress-sidebar {
-  position: fixed;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
-  background: var(--md-default-bg-color, #fff);
-  border: 2px solid var(--md-primary-fg-color, #4051b5);
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-width: 200px;
-  max-width: 250px;
-  z-index: 100;
+/* Quiz Progress Sidebar - Progress bar styling */
+/* Most styling comes from Material's .md-nav classes */
+#quiz-progress-sidebar {
+  margin-bottom: 1.5rem;
 }
-
-.quiz-progress-header {
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-bottom: 0.75rem;
-  color: var(--md-primary-fg-color, #4051b5);
-  text-align: center;
-}
-
-.quiz-progress-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.quiz-progress-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.quiz-progress-label {
-  font-size: 0.85rem;
-  color: var(--md-default-fg-color--light, #666);
-  font-weight: 500;
-}
-
-.quiz-progress-value {
-  font-size: 1rem;
-  font-weight: bold;
-  color: var(--md-default-fg-color, #000);
-}
-
 .quiz-progress-bar {
   width: 100%;
-  height: 8px;
-  background: var(--md-default-fg-color--lightest, #eee);
-  border-radius: 4px;
+  height: 6px;
+  background: var(--md-default-fg-color--lightest, rgba(0, 0, 0, 0.07));
+  border-radius: 3px;
   overflow: hidden;
+  margin: 0.2rem 0;
 }
 
 .quiz-progress-bar-fill {
   height: 100%;
   background: var(--md-primary-fg-color, #4051b5);
   transition: width 0.3s ease;
-}
-
-.quiz-progress-percentage-text {
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--md-default-fg-color, #000);
-}
-
-/* Hide sidebar on small screens */
-@media (max-width: 76.1875em) {
-  .quiz-progress-sidebar {
-    display: none;
-  }
+  border-radius: 3px;
 }
