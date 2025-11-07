@@ -38,7 +38,7 @@ except Exception as e:
 # answer-correct: Yes!
 # answer: No!
 # answer: Maybe!
-# content:
+# content: (optional)
 # <h2>Provide some additional content</h2>
 # <?/quiz?>
 
@@ -127,13 +127,14 @@ class MkDocsQuizPlugin(BasePlugin):
             raise ValueError("Quiz must start with 'question: '")
         question = quiz_lines[0].split("question: ", 1)[1]
 
-        # Find content separator
-        if "content:" not in quiz_lines:
-            raise ValueError("Quiz must include 'content:' section")
-        content_index = quiz_lines.index("content:")
-
-        # Parse answers
-        answer_lines = quiz_lines[1:content_index]
+        # Find content separator (optional)
+        if "content:" in quiz_lines:
+            content_index = quiz_lines.index("content:")
+            answer_lines = quiz_lines[1:content_index]
+        else:
+            # No content section, all lines after question are answers
+            answer_lines = quiz_lines[1:]
+            content_index = len(quiz_lines)
         correct_answers = [
             line.split("answer-correct: ", 1)[1]
             for line in answer_lines

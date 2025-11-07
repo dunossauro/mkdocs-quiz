@@ -150,6 +150,27 @@ content:
     assert "<code>Code</code>" in result
 
 
+def test_quiz_without_content_section(plugin, mock_page, mock_config):
+    """Test that content: section is optional."""
+    markdown = """
+<?quiz?>
+question: What is 2+2?
+answer-correct: 4
+answer: 3
+answer: 5
+<?/quiz?>
+"""
+
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+
+    assert "quiz" in result
+    assert "What is 2+2?" in result
+    assert 'type="radio"' in result
+    assert "correct" in result
+    # Content section should still be present but empty
+    assert '<section class="content hidden"></section>' in result
+
+
 def test_invalid_quiz_format(plugin, mock_page, mock_config):
     """Test that invalid quiz format is handled gracefully."""
     markdown = """
