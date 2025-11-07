@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mkdocs-quiz"
+name = "mkdocs_quiz"
 version = "1.0.0"
 description = "A MkDocs plugin to create interactive quizzes in your markdown documents."
 readme = "README.md"
@@ -50,7 +50,7 @@ Repository = "https://github.com/skyface753/mkdocs-quiz"
 Issues = "https://github.com/skyface753/mkdocs-quiz/issues"
 
 [project.entry-points."mkdocs.plugins"]
-mkdocs-quiz = "mkdocs_quiz.plugin:MkDocsQuizPlugin"
+mkdocs_quiz = "mkdocs_quiz.plugin:MkDocsQuizPlugin"
 
 [project.scripts]
 mkdocs-quiz = "mkdocs_quiz.cli:app"
