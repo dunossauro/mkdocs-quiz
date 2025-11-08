@@ -367,6 +367,9 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
           savedState.selectedValues.includes(input.value),
         );
 
+        // Show the content section for incorrect answers too
+        section.classList.remove("hidden");
+
         // Mark selected answers
         selectedInputs.forEach((input) => {
           if (input.hasAttribute("correct")) {
@@ -461,8 +464,10 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
       }
     });
     let section = quiz.querySelector("section");
+    // Always show the content section after submission
+    section.classList.remove("hidden");
+
     if (is_correct) {
-      section.classList.remove("hidden");
       resetFieldset(fieldset);
       // Mark all fields with colors
       const allAnswers = fieldset.querySelectorAll('input[name="answer"]');
@@ -478,7 +483,6 @@ document.querySelectorAll(".quiz").forEach((quiz) => {
       feedbackDiv.classList.add("correct");
       feedbackDiv.textContent = "Correct answer!";
     } else {
-      section.classList.add("hidden");
       resetFieldset(fieldset);
       // Mark wrong fields with colors
       Array.from(selectedAnswers).forEach((answer) => {

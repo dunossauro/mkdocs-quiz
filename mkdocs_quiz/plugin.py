@@ -165,23 +165,43 @@ class MkDocsQuizPlugin(BasePlugin):
 
         return options
 
-    def _parse_quiz_answers(
-        self, quiz_lines: list[str], start_index: int = 1
-    ) -> tuple[list[str], list[str], int]:
-        """Parse quiz answers from quiz lines.
+    def _parse_quiz_question_and_answers(
+        self, quiz_lines: list[str]
+    ) -> tuple[str, list[str], list[str], int]:
+        """Parse quiz question and answers from quiz lines.
+
+        The question is everything up to the first checkbox answer.
+        Answers are checkbox items (- [x] or - [ ]).
+        Content is everything after the last answer.
 
         Args:
             quiz_lines: The lines of the quiz content.
-            start_index: The index to start parsing from (default: 1, after question).
 
         Returns:
-            A tuple of (all_answers, correct_answers, content_start_index).
+            A tuple of (question_text, all_answers, correct_answers, content_start_index).
         """
+        # Find the first answer line
+        first_answer_index = None
+        for i, line in enumerate(quiz_lines):
+            # Check if this is a checkbox list item: - [x], - [X], - [ ], or - []
+            if re.match(r"^- \[([xX ]?)\] (.*)$", line):
+                first_answer_index = i
+                break
+
+        if first_answer_index is None:
+            # No answers found, treat everything as question
+            return "\n".join(quiz_lines), [], [], len(quiz_lines)
+
+        # Everything before the first answer is the question
+        question_lines = quiz_lines[:first_answer_index]
+        question_text = "\n".join(question_lines).strip()
+
+        # Parse answers starting from first_answer_index
         all_answers = []
         correct_answers = []
-        content_start_index = start_index
+        content_start_index = first_answer_index
 
-        for i, line in enumerate(quiz_lines[start_index:], start=start_index):
+        for i, line in enumerate(quiz_lines[first_answer_index:], start=first_answer_index):
             # Check if this is a checkbox list item: - [x], - [X], - [ ], or - []
             match = re.match(r"^- \[([xX ]?)\] (.*)$", line)
             if match:
@@ -200,7 +220,7 @@ class MkDocsQuizPlugin(BasePlugin):
                 # Not a checkbox item and not empty, must be content
                 break
 
-        return all_answers, correct_answers, content_start_index
+        return question_text, all_answers, correct_answers, content_start_index
 
     def _generate_answer_html(
         self, all_answers: list[str], correct_answers: list[str], quiz_id: int
@@ -387,15 +407,21 @@ class MkDocsQuizPlugin(BasePlugin):
         if not quiz_lines:
             raise ValueError("Quiz content is empty")
 
-        # First line is the question
-        question = quiz_lines[0]
-        question = convert_inline_markdown(question)
+        # Parse question and answers
+        # Question is everything up to the first checkbox answer
+        question_text, all_answers, correct_answers, content_start_index = (
+            self._parse_quiz_question_and_answers(quiz_lines)
+        )
+
+        # Convert question markdown to HTML (supports multi-line questions with markdown)
+        markdown_converter.reset()
+        question = markdown_converter.convert(question_text)
+        # Remove wrapping <p> tags if the question is a single paragraph
+        if question.startswith("<p>") and question.endswith("</p>") and question.count("<p>") == 1:
+            question = question[3:-4]
 
         # Get question_tag from options
         question_tag = options["question_tag"]
-
-        # Parse answers
-        all_answers, correct_answers, content_start_index = self._parse_quiz_answers(quiz_lines)
 
         if not all_answers:
             raise ValueError("Quiz must have at least one answer")

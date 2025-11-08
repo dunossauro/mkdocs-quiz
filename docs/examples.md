@@ -2,6 +2,28 @@
 
 This page demonstrates all the different types of quizzes and options available in mkdocs-quiz. Each example shows a working quiz in the "Example" tab and the markdown source code in the "Syntax" tab.
 
+The general syntax flow of a quiz question is as follows:
+
+```yaml
+<?quiz?> # (1)!
+What is 2 + 2? # (2)!
+- [ ] 3 # (3)!
+- [x] 4 # (4)!
+- [ ] 5 # (5)!
+
+Basic arithmetic is important. # (6)!
+<?/quiz?> # (7)!
+```
+
+1.  Opening tag for the quiz, denotes where it starts (as long as it's not within a code block)
+2.  The question. Can be multi-line and markdown.
+3.  An incorrect answer, as the checkbox has no tick
+4.  The correct answer, as indicated by the x in the checkbox.
+5.  Another incorrect answer. You can have as many as you want.
+    Multiple correct answers turn the radio buttons into checkboxes.
+6.  Additional content, only shown after the answer is submitted (correctly or incorrectly).
+7.  Closing tag for the quiz signifies the end.
+
 ## Basic Examples
 
 ### Single Choice Quiz
@@ -11,12 +33,18 @@ A quiz with one correct answer displays as radio buttons:
 === "Example"
 
     <?quiz?>
-    What is 2 + 2?
+    What is the answer to the following sum?
+    ```
+    2 + 2
+    ```
     - [ ] 3
     - [x] 4
     - [ ] 5
 
-    Correct! Basic arithmetic is important.
+    Full markdown is supported, even things like code blocks:
+    ```
+    2+2 = 4
+    ```
     <?/quiz?>
 
 === "Syntax"
