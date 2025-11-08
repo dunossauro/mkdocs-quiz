@@ -6,15 +6,18 @@
 
 A modern MkDocs plugin to create interactive quizzes directly in your markdown documentation. Perfect for educational content, tutorials, and documentation that requires user engagement.
 
+## 📚 Documentation and examples: https://ewels.github.io/mkdocs-quiz/
+
 ## Features
 
-- ✨ Create single-choice (radio button) and multiple-choice (checkbox) quizzes
-- 📝 Simple markdown-based syntax
-- ⚡ Instant feedback with visual indicators
-- 🎯 Reveal additional content upon correct answers
-- 🎨 HTML support in questions, answers, and content
-- 🔧 Easy to disable per-page
-- 🚀 No external dependencies beyond MkDocs
+- ✨ **Simple markdown syntax** - Create quizzes using GitHub-flavored markdown checkboxes
+- 🎯 **Single and multiple choice** - One correct answer = radio buttons, multiple = checkboxes
+- ⚡ **Instant feedback** - Visual indicators show correct/incorrect answers
+- 📊 **Progress tracking** - Automatic progress sidebar (Material theme)
+- 🎨 **Full markdown support** - Questions, answers, and content support markdown and HTML
+- 🔗 **Deep linking** - Link directly to specific quizzes with anchor tags
+- 🔧 **Flexible configuration** - Global or per-page settings
+- 🚀 **No external dependencies** - Just MkDocs
 
 ## Installation
 
@@ -43,14 +46,12 @@ Create a quiz with radio buttons (only one correct answer):
 
 ```markdown
 <?quiz?>
+What is 2+2?
+- [x] 4
+- [ ] 3
+- [ ] 5
 
-question: What is 2+2?
-answer-correct: 4
-answer: 3
-answer: 5
-content:
-
-<p>Correct! Basic math is important.</p>
+Correct! Basic math is important.
 <?/quiz?>
 ```
 
@@ -60,33 +61,29 @@ Create a quiz with checkboxes (multiple correct answers):
 
 ```markdown
 <?quiz?>
+Which are even numbers?
+- [x] 2
+- [ ] 3
+- [x] 4
+- [ ] 5
 
-question: Which are even numbers?
-answer-correct: 2
-answer: 3
-answer-correct: 4
-answer: 5
-content:
-
-<p>Great! 2 and 4 are both even numbers.</p>
+Great! 2 and 4 are both even numbers.
 <?/quiz?>
 ```
 
-> **Note:** Answers can include HTML formatting (e.g., `<code>Yes!</code>` or `<strong>Maybe!</strong>`)
-
-> **Important:** The content section must contain valid HTML.
+> **Note:** Use `- [x]` for correct answers and `- [ ]` for incorrect answers. The plugin automatically uses radio buttons for single-choice and checkboxes for multiple-choice quizzes.
 
 ## Demo & Screenshots
 
-Check out the [live demo](https://skyface753.github.io/mkdocs-quiz/) to see the plugin in action.
+Check out the [live demo](https://ewels.github.io/mkdocs-quiz/) to see the plugin in action.
 
 ### Single choice
 
-<img src="example/docs/images/quiz.png" width="400rem">
+<img src="docs/images/quiz.png" width="400rem">
 
 ### Multiple choice
 
-<img src="example/docs/images/quiz-multi.png" width="400rem">
+<img src="docs/images/quiz-multi.png" width="400rem">
 
 ## Advanced Usage
 
