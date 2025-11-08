@@ -28,7 +28,7 @@ A quiz with one correct answer displays as radio buttons:
 
 === "Syntax"
 
-    ````markdown
+    ~~~markdown
     <?quiz?>
     What is the answer to the following sum?
     ```
@@ -44,16 +44,7 @@ A quiz with one correct answer displays as radio buttons:
         assert 2 + 2 == 4
     ```
     <?/quiz?>
-    ````
-
-    **Syntax breakdown:**
-
-    - `<?quiz?>` - Opening tag
-    - Question text (can include markdown formatting)
-    - `- [ ]` - Incorrect answer (empty checkbox)
-    - `- [x]` - Correct answer (checked checkbox)
-    - Content section (optional, shown after correct answer)
-    - `<?/quiz?>` - Closing tag
+    ~~~
 
 ### Multiple Choice Quiz
 
