@@ -79,7 +79,6 @@ class MkDocsQuizPlugin(BasePlugin):
     config_scheme = (
         ("enabled_by_default", config_options.Type(bool, default=True)),
         ("auto_number", config_options.Type(bool, default=False)),
-        ("question_tag", config_options.Type(str, default="h4")),
         ("show_correct", config_options.Type(bool, default=True)),
         ("auto_submit", config_options.Type(bool, default=True)),
         ("disable_after_submit", config_options.Type(bool, default=True)),
@@ -140,14 +139,14 @@ class MkDocsQuizPlugin(BasePlugin):
         # No page-level override, use plugin default
         return enabled_by_default
 
-    def _get_quiz_options(self, page: Page) -> dict[str, bool | str]:
+    def _get_quiz_options(self, page: Page) -> dict[str, bool]:
         """Get quiz options from page frontmatter or plugin config.
 
         Args:
             page: The current page object.
 
         Returns:
-            Dictionary with show_correct, auto_submit, disable_after_submit, auto_number, and question_tag options.
+            Dictionary with show_correct, auto_submit, disable_after_submit, and auto_number options.
         """
         # Start with plugin defaults
         options = {
@@ -155,7 +154,6 @@ class MkDocsQuizPlugin(BasePlugin):
             "auto_submit": self.config.get("auto_submit", True),
             "disable_after_submit": self.config.get("disable_after_submit", True),
             "auto_number": self.config.get("auto_number", False),
-            "question_tag": self.config.get("question_tag", "h4"),
         }
 
         # Override with page-level settings if present
@@ -346,12 +344,17 @@ class MkDocsQuizPlugin(BasePlugin):
         masked_markdown, placeholders = self._mask_code_blocks(markdown)
 
         # Process quizzes and replace with placeholders
-        quiz_id = 0
         options = self._get_quiz_options(page)
 
         # Process in reverse to maintain string positions
+        # But assign quiz IDs based on original order (0 = first quiz in document)
         matches = list(re.finditer(QUIZ_REGEX, masked_markdown, re.DOTALL))
-        for match in reversed(matches):
+        total_quizzes = len(matches)
+
+        for idx, match in enumerate(reversed(matches)):
+            # Calculate quiz_id based on original position (not reversed position)
+            quiz_id = total_quizzes - idx - 1
+
             try:
                 # Generate quiz HTML
                 quiz_html = self._process_quiz(match.group(1), quiz_id, options)
@@ -368,10 +371,8 @@ class MkDocsQuizPlugin(BasePlugin):
                     masked_markdown[: match.start()] + placeholder + masked_markdown[match.end() :]
                 )
 
-                quiz_id += 1
             except Exception as e:
-                log.error(f"Failed to process quiz {quiz_id}: {e}")
-                quiz_id += 1
+                log.error(f"Failed to process quiz {quiz_id} in {page.file.src_path}: {e}")
                 continue
 
         # Restore code blocks
@@ -379,13 +380,13 @@ class MkDocsQuizPlugin(BasePlugin):
 
         return markdown
 
-    def _process_quiz(self, quiz_content: str, quiz_id: int, options: dict[str, bool | str]) -> str:
+    def _process_quiz(self, quiz_content: str, quiz_id: int, options: dict[str, bool]) -> str:
         """Process a single quiz and convert it to HTML.
 
         Args:
             quiz_content: The content inside the quiz tags.
             quiz_id: The unique ID for this quiz.
-            options: Quiz options (show_correct, auto_submit, disable_after_submit, auto_number, question_tag).
+            options: Quiz options (show_correct, auto_submit, disable_after_submit, auto_number).
 
         Returns:
             The HTML representation of the quiz.
@@ -416,12 +417,6 @@ class MkDocsQuizPlugin(BasePlugin):
         # Convert question markdown to HTML (supports multi-line questions with markdown)
         markdown_converter.reset()
         question = markdown_converter.convert(question_text)
-        # Remove wrapping <p> tags if the question is a single paragraph
-        if question.startswith("<p>") and question.endswith("</p>") and question.count("<p>") == 1:
-            question = question[3:-4]
-
-        # Get question_tag from options
-        question_tag = options["question_tag"]
 
         if not all_answers:
             raise ValueError("Quiz must have at least one answer")
@@ -464,12 +459,20 @@ class MkDocsQuizPlugin(BasePlugin):
         quiz_header_id = f"quiz-{quiz_id}"
         answers_html = "".join(answer_html_list)
 
+        # If auto_number is enabled, add a header with the question number
+        question_header = ""
+        if options["auto_number"]:
+            # quiz_id is 0-indexed, so add 1 for display
+            question_number = quiz_id + 1
+            question_header = f'<h4 class="quiz-number">Question {question_number}</h4>'
+
         quiz_html = dedent(f"""
-            <div class="quiz" {attrs}>
-                <{question_tag} id="{quiz_header_id}">
+            <div class="quiz" {attrs} id="{quiz_header_id}">
+                <a href="#{quiz_header_id}" class="quiz-header-link">#</a>
+                {question_header}
+                <div class="quiz-question">
                     {question}
-                    <a href="#{quiz_header_id}" class="quiz-header-link">#</a>
-                </{question_tag}>
+                </div>
                 <form>
                     <fieldset>{answers_html}</fieldset>
                     <div class="quiz-feedback hidden"></div>

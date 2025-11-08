@@ -43,19 +43,6 @@ quiz:
 ---
 ```
 
-## Custom Question Tags
-
-Change the HTML tag used for quiz questions:
-
-```yaml
-# mkdocs.yml
-plugins:
-  - mkdocs-quiz:
-      question_tag: h3  # Makes questions larger
-```
-
-Valid options: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `div`, `p`
-
 ## Theming Integration
 
 The plugin works with any MkDocs theme, but has special integration with Material theme:

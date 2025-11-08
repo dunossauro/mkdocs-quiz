@@ -1,17 +1,26 @@
 # Quick Start
 
-Quizzes are created using special `<?quiz?>` tags in your markdown files. The basic structure is:
+Quizzes are created using special <code>&lt;?quiz?&gt;</code> tags in your markdown files. The basic structure is:
 
-```markdown
-<?quiz?>
-Question text goes here
-- [x] Correct answer
-- [ ] Incorrect answer
-- [ ] Another incorrect answer
+```yaml
+<?quiz?> # (1)!
+Question text goes here # (2)!
+- [x] Correct answer # (3)!
+- [ ] Incorrect answer # (4)!
+- [ ] Another incorrect answer # (5)!
 
-Optional content revealed after correct answer
-<?/quiz?>
+Optional content revealed after correct answer # (6)!
+<?/quiz?> # (7)!
 ```
+
+1.  Opening tag for the quiz, denotes where it starts (as long as it's not within a code block)
+2.  The question. Can be multi-line and markdown.
+3.  The correct answer, as indicated by the x in the checkbox.
+    Multiple correct answers turn the radio buttons into checkboxes.
+4.  An incorrect answer, as the checkbox has no tick
+5.  Another incorrect answer. You can have as many as you want.
+6.  Additional content, only shown after the answer is submitted (correctly or incorrectly).
+7.  Closing tag for the quiz signifies the end.
 
 This results in:
 

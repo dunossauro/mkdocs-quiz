@@ -2,9 +2,14 @@
   border: 1px solid black;
   padding: 1rem;
   margin: 1rem 0;
+  position: relative;
 }
-/* Set margin-top of first quiz child */
-.quiz > *:first-child {
+/* Set margin-top of first quiz child (skip the header link) */
+.quiz > .quiz-question:first-of-type {
+  margin-top: 0;
+}
+/* Remove top margin from first element inside quiz-question */
+.quiz-question > *:first-child {
   margin-top: 0;
 }
 .hidden {
@@ -88,46 +93,26 @@ input[type="radio"].wrong {
   color: red;
 }
 
-/* Quiz header link styling */
-.quiz h1,
-.quiz h2,
-.quiz h3,
-.quiz h4,
-.quiz h5,
-.quiz h6 {
-  position: relative;
-}
+/* Quiz header link styling - positioned in top right corner */
 .quiz-header-link {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   opacity: 0;
-  margin-left: 0.5rem;
-  font-size: 0.8em;
+  font-size: 1rem;
   text-decoration: none;
   color: var(--md-default-fg-color--light, #888);
   transition: opacity 0.2s;
+  padding: 0.25rem 0.5rem;
 }
-.quiz h1:hover .quiz-header-link,
-.quiz h2:hover .quiz-header-link,
-.quiz h3:hover .quiz-header-link,
-.quiz h4:hover .quiz-header-link,
-.quiz h5:hover .quiz-header-link,
-.quiz h6:hover .quiz-header-link {
+.quiz:hover .quiz-header-link {
   opacity: 1;
 }
 
-/* Auto-numbering with CSS counters */
-.quiz-auto-number {
-  counter-reset: quiz-counter;
-}
-.quiz-auto-number .quiz {
-  counter-increment: quiz-counter;
-}
-.quiz-auto-number .quiz h1::before,
-.quiz-auto-number .quiz h2::before,
-.quiz-auto-number .quiz h3::before,
-.quiz-auto-number .quiz h4::before,
-.quiz-auto-number .quiz h5::before,
-.quiz-auto-number .quiz h6::before {
-  content: "Question " counter(quiz-counter) ": ";
+/* Quiz number header styling */
+.quiz-number {
+  margin-top: 0 !important;
+  margin-bottom: 0.5rem;
   font-weight: bold;
 }
 

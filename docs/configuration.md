@@ -21,7 +21,6 @@ plugins:
   - mkdocs-quiz:
       enabled_by_default: true    # Enable quizzes by default on all pages
       auto_number: false          # Auto-number questions (Question 1:, Question 2:, etc.)
-      question_tag: h4            # HTML tag for question text (h1-h6, div, span, etc.)
       show_correct: true          # Show correct answers when user gets it wrong
       auto_submit: true           # Auto-submit single-choice quizzes on selection
       disable_after_submit: true  # Disable question after first submission
@@ -34,7 +33,6 @@ The syntax is very similar when overriding these defaults at individual-page lev
 quiz:
   enabled: false
   auto_number: true
-  question_tag: h2
   show_correct: false
   auto_submit: false
   disable_after_submit: false

@@ -97,12 +97,10 @@ plugins:
   - mkdocs_quiz:
       enabled_by_default: true    # Set to false for opt-in mode
       auto_number: false          # Set to true to auto-number questions
-      question_tag: h3            # HTML tag for questions (h1-h6)
 ```
 
 - **Opt-in/opt-out mode** - `enabled_by_default: false` requires pages to explicitly enable quizzes with `quiz: enable` in front matter
-- **Auto-numbering** - `auto_number: true` automatically numbers questions as "Question 1:", "Question 2:", etc. using CSS counters
-- **Customizable question heading** - `question_tag: h2` allows using any heading level (h1-h6) instead of default h3
+- **Auto-numbering** - `auto_number: true` automatically numbers questions as "Question 1:", "Question 2:", etc.
 
 #### Progress Tracking & Persistence
 
