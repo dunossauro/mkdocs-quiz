@@ -2,7 +2,7 @@
   MkDocs Quiz Plugin - Extended Main Template
 
   This template extends the default MkDocs Material main.html to add
-  a quiz progress sidebar in the TOC sidebar.
+  a quiz progress sidebar in the TOC sidebar and mobile view.
 -->
 
 {% extends "base.html" %}
@@ -27,4 +27,12 @@
 
   <!-- Quiz progress sidebar placeholder - will be moved to TOC by script above -->
   <nav id="quiz-progress-sidebar-placeholder"></nav>
+{% endblock %}
+
+{% block tabs %}
+  <!-- Mobile quiz progress tracker - appears under navbar on mobile devices -->
+  <nav id="quiz-progress-mobile-placeholder"></nav>
+
+  <!-- Include the original tabs content -->
+  {{ super() }}
 {% endblock %}

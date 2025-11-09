@@ -155,60 +155,67 @@ const quizTracker = {
   },
 
   updateSidebar: function () {
-    const sidebar = document.getElementById("quiz-progress-sidebar");
-    if (sidebar) {
-      const progress = this.getProgress();
+    // Update both desktop and mobile sidebars
+    const sidebars = [
+      document.getElementById("quiz-progress-sidebar"),
+      document.getElementById("quiz-progress-mobile")
+    ];
 
-      // Update answered count
-      const answeredEl = sidebar.querySelector(".quiz-progress-answered");
-      if (answeredEl) {
-        answeredEl.textContent = progress.answered;
+    sidebars.forEach(sidebar => {
+      if (sidebar) {
+        const progress = this.getProgress();
+
+        // Update answered count
+        const answeredEl = sidebar.querySelector(".quiz-progress-answered");
+        if (answeredEl) {
+          answeredEl.textContent = progress.answered;
+        }
+
+        // Update answered percentage
+        const answeredPercentageEl = sidebar.querySelector(".quiz-progress-answered-percentage");
+        if (answeredPercentageEl) {
+          answeredPercentageEl.textContent = progress.percentage + "%";
+        }
+
+        // Update all .quiz-progress-total elements
+        const totalElements = sidebar.querySelectorAll(".quiz-progress-total");
+        totalElements.forEach((el) => {
+          el.textContent = progress.total;
+        });
+
+        // Update correct count
+        const scoreEl = sidebar.querySelector(".quiz-progress-score");
+        if (scoreEl) {
+          scoreEl.textContent = progress.correct;
+        }
+
+        // Update correct denominator (answered count)
+        const scoreTotalEl = sidebar.querySelector(".quiz-progress-score-total");
+        if (scoreTotalEl) {
+          scoreTotalEl.textContent = progress.answered;
+        }
+
+        // Update correct percentage (based on answered quizzes, not total)
+        const scorePercentageEl = sidebar.querySelector(".quiz-progress-score-percentage");
+        if (scorePercentageEl) {
+          const scorePercentage = progress.answered > 0 ? Math.round((progress.correct / progress.answered) * 100) : 0;
+          scorePercentageEl.textContent = scorePercentage + "%";
+        }
+
+        // Update progress bars (incorrect and correct)
+        const correctBar = sidebar.querySelector(".quiz-progress-bar-correct");
+        const incorrectBar = sidebar.querySelector(".quiz-progress-bar-incorrect");
+
+        if (correctBar && incorrectBar) {
+          const incorrectCount = progress.answered - progress.correct;
+          const correctPercentage = progress.total > 0 ? (progress.correct / progress.total) * 100 : 0;
+          const incorrectPercentage = progress.total > 0 ? (incorrectCount / progress.total) * 100 : 0;
+
+          incorrectBar.style.width = incorrectPercentage + "%";
+          correctBar.style.width = correctPercentage + "%";
+        }
       }
-
-      // Update answered percentage
-      const answeredPercentageEl = sidebar.querySelector(".quiz-progress-answered-percentage");
-      if (answeredPercentageEl) {
-        answeredPercentageEl.textContent = progress.percentage + "%";
-      }
-
-      // Update all .quiz-progress-total elements
-      const totalElements = sidebar.querySelectorAll(".quiz-progress-total");
-      totalElements.forEach((el) => {
-        el.textContent = progress.total;
-      });
-
-      // Update correct count
-      const scoreEl = sidebar.querySelector(".quiz-progress-score");
-      if (scoreEl) {
-        scoreEl.textContent = progress.correct;
-      }
-
-      // Update correct denominator (answered count)
-      const scoreTotalEl = sidebar.querySelector(".quiz-progress-score-total");
-      if (scoreTotalEl) {
-        scoreTotalEl.textContent = progress.answered;
-      }
-
-      // Update correct percentage (based on answered quizzes, not total)
-      const scorePercentageEl = sidebar.querySelector(".quiz-progress-score-percentage");
-      if (scorePercentageEl) {
-        const scorePercentage = progress.answered > 0 ? Math.round((progress.correct / progress.answered) * 100) : 0;
-        scorePercentageEl.textContent = scorePercentage + "%";
-      }
-
-      // Update progress bars (incorrect and correct)
-      const correctBar = sidebar.querySelector(".quiz-progress-bar-correct");
-      const incorrectBar = sidebar.querySelector(".quiz-progress-bar-incorrect");
-
-      if (correctBar && incorrectBar) {
-        const incorrectCount = progress.answered - progress.correct;
-        const correctPercentage = progress.total > 0 ? (progress.correct / progress.total) * 100 : 0;
-        const incorrectPercentage = progress.total > 0 ? (incorrectCount / progress.total) * 100 : 0;
-
-        incorrectBar.style.width = incorrectPercentage + "%";
-        correctBar.style.width = correctPercentage + "%";
-      }
-    }
+    });
   },
 
   createSidebar: function () {
@@ -219,67 +226,81 @@ const quizTracker = {
 
     const progress = this.getProgress();
 
-    // Create nav element matching Material's TOC structure
-    const nav = document.createElement("nav");
-    nav.id = "quiz-progress-sidebar";
-    nav.className = "md-nav md-nav--secondary";
-    nav.setAttribute("aria-label", "Quiz Progress");
+    // Helper function to create sidebar HTML
+    const createSidebarHTML = (id, className, showTitle) => {
+      const nav = document.createElement("nav");
+      nav.id = id;
+      nav.className = className;
+      nav.setAttribute("aria-label", "Quiz Progress");
 
-    nav.innerHTML = `
-      <label class="md-nav__title" for="__quiz-progress">
-        <span class="md-nav__icon md-icon"></span>
-        Quiz Progress
-      </label>
-      <ul class="md-nav__list" data-md-component="quiz-progress">
-        <li class="md-nav__item">
-          <div class="md-nav__link">
-            <span class="md-ellipsis">
-              Answered: <span class="quiz-progress-answered">${progress.answered}</span> / <span class="quiz-progress-total">${progress.total}</span> (<span class="quiz-progress-answered-percentage">${progress.percentage}%</span>)
-            </span>
-          </div>
-        </li>
-        <li class="md-nav__item">
-          <div class="md-nav__link">
-            <div class="quiz-progress-bar">
-              <div class="quiz-progress-bar-incorrect" style="width: ${progress.answered > progress.correct ? ((progress.answered - progress.correct) / progress.total) * 100 : 0}%"></div>
-              <div class="quiz-progress-bar-correct" style="width: ${progress.score}%"></div>
+      const titleSection = showTitle ? `
+        <label class="md-nav__title" for="__quiz-progress">
+          <span class="md-nav__icon md-icon"></span>
+          Quiz Progress
+        </label>
+      ` : '';
+
+      nav.innerHTML = `
+        ${titleSection}
+        <ul class="md-nav__list" data-md-component="quiz-progress">
+          <li class="md-nav__item">
+            <div class="md-nav__link">
+              <span class="md-ellipsis">
+                Answered: <span class="quiz-progress-answered">${progress.answered}</span> / <span class="quiz-progress-total">${progress.total}</span> (<span class="quiz-progress-answered-percentage">${progress.percentage}%</span>)
+              </span>
             </div>
-          </div>
-        </li>
-        <li class="md-nav__item">
-          <div class="md-nav__link quiz-correct-reset">
-            <span class="md-ellipsis">
-              Correct: <span class="quiz-progress-score">${progress.correct}</span> / <span class="quiz-progress-score-total">${progress.answered}</span> (<span class="quiz-progress-score-percentage">${progress.answered > 0 ? Math.round((progress.correct / progress.answered) * 100) : 0}%</span>)
-            </span>
-            <a href="#" class="quiz-reset-all-link" style="color: var(--md-primary-fg-color); text-decoration: none;">
-              Reset
-            </a>
-          </div>
-        </li>
-      </ul>
-    `;
+          </li>
+          <li class="md-nav__item">
+            <div class="md-nav__link">
+              <div class="quiz-progress-bar">
+                <div class="quiz-progress-bar-incorrect" style="width: ${progress.answered > progress.correct ? ((progress.answered - progress.correct) / progress.total) * 100 : 0}%"></div>
+                <div class="quiz-progress-bar-correct" style="width: ${progress.score}%"></div>
+              </div>
+            </div>
+          </li>
+          <li class="md-nav__item">
+            <div class="md-nav__link quiz-correct-reset">
+              <span class="md-ellipsis">
+                Correct: <span class="quiz-progress-score">${progress.correct}</span> / <span class="quiz-progress-score-total">${progress.answered}</span> (<span class="quiz-progress-score-percentage">${progress.answered > 0 ? Math.round((progress.correct / progress.answered) * 100) : 0}%</span>)
+              </span>
+              <a href="#" class="quiz-reset-all-link" style="color: var(--md-primary-fg-color); text-decoration: none;">
+                Reset
+              </a>
+            </div>
+          </li>
+        </ul>
+      `;
 
-    // Replace the placeholder nav element (created by overridden main.html)
-    // Fall back to article/body if placeholder doesn't exist
-    const placeholder = document.getElementById("quiz-progress-sidebar-placeholder");
-    if (placeholder && placeholder.parentNode) {
-      // Replace the placeholder with the actual quiz progress sidebar
-      placeholder.parentNode.replaceChild(nav, placeholder);
+      // Add event listener for reset link
+      const resetLink = nav.querySelector(".quiz-reset-all-link");
+      if (resetLink) {
+        resetLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (confirm("Are you sure you want to reset the quiz? This will clear your progress.")) {
+            quizTracker.resetAllQuiz();
+          }
+        });
+      }
+
+      return nav;
+    };
+
+    // Create desktop sidebar (for TOC sidebar)
+    const desktopNav = createSidebarHTML("quiz-progress-sidebar", "md-nav md-nav--secondary", true);
+    const desktopPlaceholder = document.getElementById("quiz-progress-sidebar-placeholder");
+    if (desktopPlaceholder && desktopPlaceholder.parentNode) {
+      desktopPlaceholder.parentNode.replaceChild(desktopNav, desktopPlaceholder);
     } else {
       // Fallback: append to article/body if no placeholder found
       const container = document.querySelector("article") || document.querySelector("main") || document.body;
-      container.appendChild(nav);
+      container.appendChild(desktopNav);
     }
 
-    // Add event listener for reset link
-    const resetLink = nav.querySelector(".quiz-reset-all-link");
-    if (resetLink) {
-      resetLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (confirm("Are you sure you want to reset the quiz? This will clear your progress.")) {
-          quizTracker.resetAllQuiz();
-        }
-      });
+    // Create mobile sidebar (under navbar)
+    const mobileNav = createSidebarHTML("quiz-progress-mobile", "quiz-progress-mobile md-nav", false);
+    const mobilePlaceholder = document.getElementById("quiz-progress-mobile-placeholder");
+    if (mobilePlaceholder && mobilePlaceholder.parentNode) {
+      mobilePlaceholder.parentNode.replaceChild(mobileNav, mobilePlaceholder);
     }
   },
 };
