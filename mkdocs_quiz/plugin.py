@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 import re
 from importlib import resources as impresources
@@ -31,7 +32,7 @@ try:
     with js_file.open("rt") as f:
         js_content = f.read()
     js_script = f'<script type="text/javascript" defer>{js_content}</script>'
-except Exception as e:
+except OSError as e:
     log.error(f"Failed to load CSS/JS resources: {e}")
     style = ""
     js_script = ""
@@ -194,8 +195,10 @@ class MkDocsQuizPlugin(BasePlugin):
                 break
 
         if first_answer_index is None:
-            # No answers found, treat everything as question
-            return "\n".join(quiz_lines), [], [], len(quiz_lines)
+            # No answers found - invalid quiz structure
+            question_text = "\n".join(quiz_lines).strip()
+            log.warning(f"Quiz has no checkbox answers: {question_text[:50]}...")
+            return question_text, [], [], len(quiz_lines)
 
         # Everything before the first answer is the question
         question_lines = quiz_lines[:first_answer_index]
@@ -251,8 +254,11 @@ class MkDocsQuizPlugin(BasePlugin):
             input_type = "checkbox" if as_checkboxes else "radio"
             correct_attr = "correct" if is_correct else ""
 
+            # Escape the value attribute for defense-in-depth (i is numeric, but escape anyway)
+            escaped_value = html.escape(str(i))
+
             answer_html = (
-                f'<div><input type="{input_type}" name="answer" value="{i}" '
+                f'<div><input type="{input_type}" name="answer" value="{escaped_value}" '
                 f'id="{input_id}" {correct_attr}>'
                 f'<label for="{input_id}">{answer}</label></div>'
             )
@@ -429,14 +435,17 @@ class MkDocsQuizPlugin(BasePlugin):
             self._parse_quiz_question_and_answers(quiz_lines)
         )
 
-        # Convert question markdown to HTML (supports multi-line questions with markdown)
-        markdown_converter.reset()
-        question = markdown_converter.convert(question_text)
-
+        # Validate quiz structure
+        if not question_text.strip():
+            raise ValueError("Quiz must have a question")
         if not all_answers:
             raise ValueError("Quiz must have at least one answer")
         if not correct_answers:
             raise ValueError("Quiz must have at least one correct answer")
+
+        # Convert question markdown to HTML (supports multi-line questions with markdown)
+        markdown_converter.reset()
+        question = markdown_converter.convert(question_text)
 
         # Generate answer HTML
         answer_html_list, as_checkboxes = self._generate_answer_html(
