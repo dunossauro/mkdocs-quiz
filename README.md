@@ -34,6 +34,9 @@ You've come to the right place!
   <img src="docs/images/quiz_readme.png" alt="mkdocs-quiz">
 </picture>
 
+> [!TIP]
+> Check out the [examples page](https://ewels.github.io/mkdocs-quiz/examples/) to see the plugin in action.
+
 ## Installation
 
 Install the package with pip:
@@ -70,6 +73,8 @@ Correct! Basic math is important.
 </quiz>
 ```
 
+Use `- [x]` for correct answers and `- [ ]` for incorrect answers.
+
 #### Multiple choice quiz
 
 Create a quiz with checkboxes (multiple correct answers):
@@ -85,21 +90,6 @@ Which are even numbers?
 Great! 2 and 4 are both even numbers.
 </quiz>
 ```
-
-> **Note:** Use `- [x]` for correct answers and `- [ ]` for incorrect answers. The plugin automatically uses radio buttons for single-choice and checkboxes for multiple-choice quizzes.
-
-## Demo & Screenshots
-
-Check out the [live demo](https://ewels.github.io/mkdocs-quiz/) to see the plugin in action.
-
-### Single choice
-
-<img src="docs/images/quiz.png" width="400rem">
-
-### Multiple choice
-
-<img src="docs/images/quiz-multi.png" width="400rem">
-
 
 ## Contributing
 
