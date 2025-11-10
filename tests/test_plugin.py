@@ -729,3 +729,144 @@ Capital X test?
     # Should recognize capital X as correct
     assert 'correct' in html_result
     assert 'type="radio"' in html_result
+
+
+def test_malformed_checkbox_y(plugin, mock_page, mock_config):
+    """Test that malformed checkboxes with 'y' are treated as incorrect."""
+    markdown = """
+<quiz>
+Question?
+- [y] This should NOT be correct
+- [x] This IS correct
+- [ ] Wrong
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    html_result = plugin.on_page_content(result, page=mock_page, config=mock_config, files=None)
+
+    # Should only have one correct answer (the [x] one)
+    # The [y] should be treated as an empty checkbox
+    assert html_result.count(' correct>') == 1
+    assert 'type="radio"' in html_result  # Single choice since only 1 correct
+
+
+def test_malformed_checkbox_various(plugin, mock_page, mock_config):
+    """Test various malformed checkbox formats."""
+    markdown = """
+<quiz>
+Question?
+- [✓] Check mark (treated as incorrect)
+- [x] Correct
+- [*] Star (treated as incorrect)
+- [ ] Empty
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    html_result = plugin.on_page_content(result, page=mock_page, config=mock_config, files=None)
+
+    # Should only recognize [x] as correct
+    assert html_result.count(' correct>') == 1
+    # Should have 4 answer options
+    assert html_result.count('type="radio"') == 4
+
+
+def test_very_long_quiz_content(plugin, mock_page, mock_config):
+    """Test that very long quiz content is handled properly (stress test)."""
+    # Generate a long question and many answers
+    long_question = "Question? " + ("This is a very long question. " * 50)
+    # Use text without hyphens to avoid confusion with list items
+    answers = "\n".join([f"- [{'x' if i == 0 else ' '}] Answer {i} with lots of words " + ("word " * 20) for i in range(20)])
+    long_content = "\n\nContent section with lots of text.\n\n" + ("This is content. " * 100)
+
+    markdown = f"""
+<quiz>
+{long_question}
+{answers}
+{long_content}
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    html_result = plugin.on_page_content(result, page=mock_page, config=mock_config, files=None)
+
+    # Should process successfully despite large size
+    assert 'type="radio"' in html_result
+    # At least 20 radio buttons (exact count may vary based on parsing)
+    assert html_result.count('type="radio"') >= 20
+    assert 'correct' in html_result
+    assert "Content section with lots of text" in html_result
+
+
+def test_special_characters_in_question(plugin, mock_page, mock_config):
+    """Test special HTML characters in question text."""
+    markdown = """
+<quiz>
+What does <div class="test"> & "quotes" do?
+- [x] It's HTML & markup
+- [ ] Nothing
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    html_result = plugin.on_page_content(result, page=mock_page, config=mock_config, files=None)
+
+    # Markdown should escape HTML in question
+    # The exact escaping depends on markdown processor, but should be safe
+    assert 'type="radio"' in html_result
+    assert "quiz-question" in html_result
+
+
+def test_quiz_with_only_empty_checkboxes(plugin, mock_page, mock_config):
+    """Test quiz with all empty checkboxes (no correct answers)."""
+    markdown = """
+<quiz>
+Question?
+- [ ] Answer 1
+- [ ] Answer 2
+- [ ] Answer 3
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    # Should be rejected (no correct answers)
+    assert "MKDOCS_QUIZ_PLACEHOLDER" not in result or result == markdown
+
+
+def test_nested_lists_in_quiz_content(plugin, mock_page, mock_config):
+    """Test nested lists in quiz content section."""
+    markdown = """
+<quiz>
+What is this?
+- [x] A list
+- [ ] Not a list
+
+Content with list:
+
+- Item 1
+- Item 2
+- Item 3
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    html_result = plugin.on_page_content(result, page=mock_page, config=mock_config, files=None)
+
+    # Should process successfully
+    assert 'type="radio"' in html_result
+    # Content section should have the list converted to HTML
+    assert "Item 1" in html_result
+    assert "Item 2" in html_result
+
+
+def test_markdown_formatting_in_question(plugin, mock_page, mock_config):
+    """Test markdown formatting (bold, italic, code) in question."""
+    markdown = """
+<quiz>
+What does **bold** and *italic* and `code` mean?
+- [x] Markdown formatting
+- [ ] Nothing
+</quiz>
+"""
+    result = plugin.on_page_markdown(markdown, mock_page, mock_config)
+    html_result = plugin.on_page_content(result, page=mock_page, config=mock_config, files=None)
+
+    # Should process markdown in question
+    assert "<strong>bold</strong>" in html_result
+    assert "<em>italic</em>" in html_result
+    assert "<code>code</code>" in html_result
