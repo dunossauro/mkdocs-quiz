@@ -325,91 +325,35 @@
     },
 
     createSidebar: function () {
-      // Only create sidebar if there are multiple quizzes
+      // Only show sidebar if there are multiple quizzes
       if (this.totalQuizzes <= 1) {
         return;
       }
 
-      const progress = this.getProgress();
+      // Show both desktop and mobile sidebars
+      const desktopSidebar = document.getElementById("quiz-progress-sidebar");
+      const mobileSidebar = document.getElementById("quiz-progress-mobile");
 
-      // Helper function to create sidebar HTML
-      const createSidebarHTML = (id, className, showTitle) => {
-        const nav = document.createElement("nav");
-        nav.id = id;
-        nav.className = className;
-        nav.setAttribute("aria-label", "Quiz Progress");
-
-        const titleSection = showTitle
-          ? `
-        <label class="md-nav__title" for="__quiz-progress">
-          <span class="md-nav__icon md-icon"></span>
-          Quiz Progress
-        </label>
-      `
-          : "";
-
-        nav.innerHTML = `
-        ${titleSection}
-        <ul class="md-nav__list" data-md-component="quiz-progress">
-          <li class="md-nav__item">
-            <div class="md-nav__link">
-              <span class="md-ellipsis">
-                Answered: <span class="quiz-progress-answered">${progress.answered}</span> / <span class="quiz-progress-total">${progress.total}</span> (<span class="quiz-progress-answered-percentage">${progress.percentage}%</span>)
-              </span>
-            </div>
-          </li>
-          <li class="md-nav__item">
-            <div class="md-nav__link">
-              <div class="quiz-progress-bar">
-                <div class="quiz-progress-bar-incorrect" style="width: ${progress.answered > progress.correct ? ((progress.answered - progress.correct) / progress.total) * 100 : 0}%"></div>
-                <div class="quiz-progress-bar-correct" style="width: ${progress.score}%"></div>
-              </div>
-            </div>
-          </li>
-          <li class="md-nav__item">
-            <div class="md-nav__link quiz-correct-reset">
-              <span class="md-ellipsis">
-                Correct: <span class="quiz-progress-score">${progress.correct}</span> / <span class="quiz-progress-score-total">${progress.answered}</span> (<span class="quiz-progress-score-percentage">${progress.answered > 0 ? Math.round((progress.correct / progress.answered) * 100) : 0}%</span>)
-              </span>
-              <a href="#" class="quiz-reset-all-link" style="color: var(--md-primary-fg-color); text-decoration: none;">
-                Reset
-              </a>
-            </div>
-          </li>
-        </ul>
-      `;
-
-        // Add event listener for reset link
-        const resetLink = nav.querySelector(".quiz-reset-all-link");
-        if (resetLink) {
-          resetLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (confirm("Are you sure you want to reset the quiz? This will clear your progress.")) {
-              quizTracker.resetAllQuiz();
-            }
-          });
-        }
-
-        return nav;
-      };
-
-      // Create desktop sidebar (for TOC sidebar)
-      const desktopNav = createSidebarHTML("quiz-progress-sidebar", "md-nav md-nav--secondary", true);
-      const desktopPlaceholder = document.getElementById("quiz-progress-sidebar-placeholder");
-      if (desktopPlaceholder && desktopPlaceholder.parentNode) {
-        desktopPlaceholder.parentNode.replaceChild(desktopNav, desktopPlaceholder);
-      } else {
-        // Fallback: append to article/body if no placeholder found
-        const container = document.querySelector("article") || document.querySelector("main") || document.body;
-        container.appendChild(desktopNav);
+      if (desktopSidebar) {
+        desktopSidebar.style.display = "";
+      }
+      if (mobileSidebar) {
+        mobileSidebar.style.display = "";
       }
 
-      // Create mobile sidebar (under navbar)
-      const mobileNav = createSidebarHTML("quiz-progress-mobile", "quiz-progress-mobile md-nav", false);
-      const mobilePlaceholder = document.getElementById("quiz-progress-mobile-placeholder");
-      if (mobilePlaceholder && mobilePlaceholder.parentNode) {
-        mobilePlaceholder.parentNode.replaceChild(mobileNav, mobilePlaceholder);
-      }
+      // Initialize reset button event listeners
+      const resetLinks = document.querySelectorAll(".quiz-reset-all-link");
+      resetLinks.forEach((resetLink) => {
+        resetLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (confirm("Are you sure you want to reset the quiz? This will clear your progress.")) {
+            quizTracker.resetAllQuiz();
+          }
+        });
+      });
+
+      // Update the sidebar with initial values
+      this.updateSidebar();
     },
   };
 
