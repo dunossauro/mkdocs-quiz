@@ -25,18 +25,18 @@ log = logging.getLogger("mkdocs.plugins.mkdocs_quiz")
 # Load CSS and JS resources at module level
 try:
     inp_file = impresources.files(css) / "quiz.css"
-    with inp_file.open("rt") as f:
+    with inp_file.open("r") as f:
         style = f.read()
     style = f'<style type="text/css">{style}</style>'
 
     js_file = impresources.files(js) / "quiz.js"
-    with js_file.open("rt") as f:
+    with js_file.open("r") as f:
         js_content = f.read()
     js_script = f'<script type="text/javascript" defer>{js_content}</script>'
 
     # Load confetti library from vendor directory (v0.12.0)
     confetti_file = impresources.files(js) / "vendor" / "js-confetti.browser.js"
-    with confetti_file.open("rt") as f:
+    with confetti_file.open("r") as f:
         confetti_content = f.read()
     confetti_lib_script = f'<script type="text/javascript">{confetti_content}</script>'
 except OSError as e:
@@ -57,7 +57,7 @@ def get_markdown_converter() -> md.Markdown:
     """
     if not hasattr(_markdown_converter_local, "converter"):
         _markdown_converter_local.converter = md.Markdown(extensions=["extra", "codehilite", "toc"])
-    return _markdown_converter_local.converter
+    return _markdown_converter_local.converter  # type: ignore[no-any-return]
 
 
 # Quiz tag format:
@@ -162,10 +162,10 @@ class MkDocsQuizPlugin(BasePlugin):
 
         # Handle frontmatter: quiz: { enabled: true/false }
         if isinstance(quiz_meta, dict):
-            return quiz_meta.get("enabled", enabled_by_default)
+            return quiz_meta.get("enabled", enabled_by_default)  # type: ignore[no-any-return]
 
         # No page-level override, use plugin default
-        return enabled_by_default
+        return enabled_by_default  # type: ignore[no-any-return]
 
     def _get_quiz_options(self, page: Page) -> dict[str, bool]:
         """Get quiz options from page frontmatter or plugin config.
@@ -683,4 +683,4 @@ class MkDocsQuizPlugin(BasePlugin):
         """
         ).strip()
 
-        return html + style + confetti_script + config_script + js_script + auto_number_script
+        return html + style + confetti_script + config_script + js_script + auto_number_script  # type: ignore[no-any-return]

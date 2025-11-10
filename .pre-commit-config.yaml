@@ -30,4 +30,3 @@ repos:
       - id: mypy
         additional_dependencies: [types-PyYAML, types-Markdown, mkdocs>=1.4.0]
         args: [--ignore-missing-imports]
-        stages: [manual]

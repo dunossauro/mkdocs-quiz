@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
 import typer
@@ -97,7 +96,7 @@ def migrate_file(file_path: Path, dry_run: bool = False) -> tuple[int, bool]:
     try:
         content = file_path.read_text(encoding="utf-8")
     except Exception as e:
-        console.print(f"  [red]❌ Error reading {file_path}: {e}[/red]", file=sys.stderr)
+        console.print(f"  [red]❌ Error reading {file_path}: {e}[/red]")
         return 0, False
 
     # Pattern to match quiz blocks
