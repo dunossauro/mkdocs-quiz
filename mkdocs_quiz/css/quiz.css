@@ -168,6 +168,9 @@ input[type="radio"].wrong {
   margin: 0;
   width: 100%;
   box-sizing: border-box;
+  position: sticky;
+  top: 48px;
+  z-index: 3; /* Below Material header (z-index: 4) but above page content */
 }
 
 /* Show mobile tracker only on small screens (mobile/tablet) */

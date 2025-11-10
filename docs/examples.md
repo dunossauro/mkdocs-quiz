@@ -349,6 +349,10 @@ You can include code examples in the content section:
     </quiz>
     ```
 
+You made it to the end of the quiz!
+See the [Results Screen](results-screen.md) page to read how to add one of these:
+
+<!-- mkdocs-quiz results -->
 
 ## Important Notes
 
