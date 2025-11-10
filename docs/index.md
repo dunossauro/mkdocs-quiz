@@ -22,7 +22,7 @@ What's the best static site generator? <!-- (1)! -->
 - [ ] Sphinx
 
 You've come to the right place! <!-- (4)! -->
-![Random cat photo](https://cataas.com/cat)
+![Random cat gif](https://cataas.com/cat/gif)
 </quiz>
 ```
 
@@ -39,8 +39,11 @@ What's the best static site generator? <!-- (1)! -->
 
 You've come to the right place! <!-- (4)! -->
 
-![Random cat photo](https://cataas.com/cat){ width="200" }
+![Random cat gif](https://cataas.com/cat/gif){ width="200" }
 </quiz>
+
+!!! info
+    <!-- mkdocs-quiz intro -->
 
 ## License
 
