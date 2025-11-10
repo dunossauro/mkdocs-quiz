@@ -388,34 +388,40 @@ class MkDocsQuizPlugin(BasePlugin):
         # Process quizzes and replace with placeholders
         options = self._get_quiz_options(page)
 
-        # Process in reverse to maintain string positions
-        # But assign quiz IDs based on original order (0 = first quiz in document)
+        # Find all quiz matches
         matches = list(re.finditer(QUIZ_REGEX, masked_markdown, re.DOTALL))
-        total_quizzes = len(matches)
 
-        for idx, match in enumerate(reversed(matches)):
-            # Calculate quiz_id based on original position (not reversed position)
-            quiz_id = total_quizzes - idx - 1
+        # Build replacement segments efficiently (O(n) instead of O(n²))
+        segments = []
+        last_end = 0
 
+        for quiz_id, match in enumerate(matches):
             try:
                 # Generate quiz HTML
                 quiz_html = self._process_quiz(match.group(1), quiz_id, options)
 
                 # Create a markdown-safe placeholder
-                # Using a format that won't be affected by markdown processing
                 placeholder = f"<!-- MKDOCS_QUIZ_PLACEHOLDER_{quiz_id} -->"
 
                 # Store the quiz HTML for later injection
                 self._quiz_storage[page_key][placeholder] = quiz_html
 
-                # Replace quiz tag with placeholder
-                masked_markdown = (
-                    masked_markdown[: match.start()] + placeholder + masked_markdown[match.end() :]
-                )
+                # Add the text before this match and the placeholder
+                segments.append(masked_markdown[last_end : match.start()])
+                segments.append(placeholder)
+                last_end = match.end()
 
             except Exception as e:
                 log.error(f"Failed to process quiz {quiz_id} in {page.file.src_path}: {e}")
-                continue
+                # On error, include the original quiz text
+                segments.append(masked_markdown[last_end : match.end()])
+                last_end = match.end()
+
+        # Add any remaining text after the last match
+        segments.append(masked_markdown[last_end:])
+
+        # Join all segments at once (single operation)
+        masked_markdown = "".join(segments)
 
         # Restore code blocks
         markdown = self._unmask_code_blocks(masked_markdown, placeholders)
