@@ -349,8 +349,11 @@
     },
 
     createSidebar: function () {
-      // Only show sidebar if there are multiple quizzes
-      if (this.totalQuizzes <= 1) {
+      // Check if progress tracking is enabled
+      const showProgress = window.mkdocsQuizConfig && window.mkdocsQuizConfig.showProgress !== false;
+
+      // Only show sidebar if progress tracking is enabled and there are quizzes
+      if (!showProgress || this.totalQuizzes === 0) {
         return;
       }
 

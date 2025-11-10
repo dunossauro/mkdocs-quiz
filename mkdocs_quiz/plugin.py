@@ -82,6 +82,7 @@ class MkDocsQuizPlugin(BasePlugin):
         ("show_correct", config_options.Type(bool, default=True)),
         ("auto_submit", config_options.Type(bool, default=True)),
         ("disable_after_submit", config_options.Type(bool, default=True)),
+        ("show_progress", config_options.Type(bool, default=True)),
         ("confetti", config_options.Type(bool, default=True)),
     )
 
@@ -151,7 +152,7 @@ class MkDocsQuizPlugin(BasePlugin):
             page: The current page object.
 
         Returns:
-            Dictionary with show_correct, auto_submit, disable_after_submit, and auto_number options.
+            Dictionary with show_correct, auto_submit, disable_after_submit, auto_number, and show_progress options.
         """
         # Start with plugin defaults
         options = {
@@ -159,6 +160,7 @@ class MkDocsQuizPlugin(BasePlugin):
             "auto_submit": self.config.get("auto_submit", True),
             "disable_after_submit": self.config.get("disable_after_submit", True),
             "auto_number": self.config.get("auto_number", False),
+            "show_progress": self.config.get("show_progress", True),
         }
 
         # Override with page-level settings if present
@@ -610,11 +612,13 @@ class MkDocsQuizPlugin(BasePlugin):
             confetti_script = '<script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>'
 
         # Add configuration object for JavaScript
+        show_progress = options.get("show_progress", True)
         config_script = dedent(
             f"""
             <script type="text/javascript">
             window.mkdocsQuizConfig = {{
-              confetti: {str(confetti_enabled).lower()}
+              confetti: {str(confetti_enabled).lower()},
+              showProgress: {str(show_progress).lower()}
             }};
             </script>
         """
