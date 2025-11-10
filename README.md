@@ -57,7 +57,7 @@ plugins:
   - mkdocs-quiz
 ```
 
-### 2. Create your first quiz
+### 2. Add your first question
 
 Create a quiz with radio buttons (only one correct answer):
 
@@ -74,6 +74,8 @@ Correct! Basic math is important.
 
 Use `- [x]` for correct answers and `- [ ]` for incorrect answers.
 If multiple answers are correct, checkboxes instead of radio buttons will be shown (the user has to select all correct answers).
+
+### 3. Intro text and results
 
 Insert these placeholder comments for some intro text with a reset button and a final results panel (which shoots confetti when you finish):
 
