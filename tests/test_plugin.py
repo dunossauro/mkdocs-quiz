@@ -574,23 +574,26 @@ Question?
 
 def test_material_theme_integration(plugin):
     """Test that Material theme template overrides are added."""
-    from jinja2 import DictLoader, Environment
+    from unittest.mock import Mock
+
+    from jinja2 import ChoiceLoader, DictLoader, Environment
     from mkdocs.config.defaults import MkDocsConfig
-    from mkdocs.theme import Theme
 
     # Create a mock environment
     env = Environment(loader=DictLoader({}))
 
-    # Create proper config with Material theme
+    # Create proper config with mocked Material theme
     config = MkDocsConfig()
-    config["theme"] = Theme(name="material")
+    mock_theme = Mock()
+    mock_theme.name = "material"
+    config["theme"] = mock_theme
 
     # Call on_env
     result_env = plugin.on_env(env, config, None)
 
     # Should add our template loader
     assert result_env is not None
-    assert isinstance(result_env.loader, object)  # ChoiceLoader was added
+    assert isinstance(result_env.loader, ChoiceLoader)  # ChoiceLoader was added
 
 
 def test_show_progress_config(plugin, mock_page, mock_config):
