@@ -5,8 +5,8 @@ from __future__ import annotations
 import html
 import logging
 import re
+import sys
 import threading
-from importlib import resources as impresources
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -18,24 +18,30 @@ from mkdocs.plugins import BasePlugin
 from mkdocs.structure.files import Files
 from mkdocs.structure.pages import Page
 
+# Compatibility import for Python 3.8
+if sys.version_info >= (3, 9):
+    from importlib.resources import files
+else:
+    from importlib_resources import files
+
 from . import css, js
 
 log = logging.getLogger("mkdocs.plugins.mkdocs_quiz")
 
 # Load CSS and JS resources at module level
 try:
-    inp_file = impresources.files(css) / "quiz.css"  # type: ignore[attr-defined]
+    inp_file = files(css) / "quiz.css"
     with inp_file.open("r") as f:
         style = f.read()
     style = f'<style type="text/css">{style}</style>'
 
-    js_file = impresources.files(js) / "quiz.js"  # type: ignore[attr-defined]
+    js_file = files(js) / "quiz.js"
     with js_file.open("r") as f:
         js_content = f.read()
     js_script = f'<script type="text/javascript" defer>{js_content}</script>'
 
     # Load confetti library from vendor directory (v0.12.0)
-    confetti_file = impresources.files(js) / "vendor" / "js-confetti.browser.js"  # type: ignore[attr-defined]
+    confetti_file = files(js) / "vendor" / "js-confetti.browser.js"
     with confetti_file.open("r") as f:
         confetti_content = f.read()
     confetti_lib_script = f'<script type="text/javascript">{confetti_content}</script>'
