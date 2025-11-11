@@ -54,4 +54,4 @@ This project is licensed under the Apache License 2.0 - see the LICENSE file for
 ## Credits
 
 - Original author: [Sebastian Jörz](https://github.com/skyface753)
-- Co-maintained by: [Phil Ewels](https://github.com/ewels)
+- Rewritten by: [Phil Ewels](https://github.com/ewels)
