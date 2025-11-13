@@ -13,7 +13,7 @@ A modern MkDocs plugin to create interactive quizzes directly in your markdown d
 - ✨ **Simple markdown syntax** - Create quizzes using GitHub-flavored markdown checkboxes
 - 🎯 **Single and multiple choice** - One correct answer = radio buttons, multiple = checkboxes
 - ⚡ **Instant feedback** - Visual indicators show correct/incorrect answers
-- 📊 **Progress tracking** - Automatic progress sidebar and results panel, with confetti :tada:
+- 📊 **Progress tracking** - Automatic progress sidebar and results panel, with confetti 🎉
 - 💾 **Results saved** - Answers are saved to the browser's local storage
 
 > [!TIP]
@@ -99,7 +99,7 @@ Contributions are welcome! Please see [the contribution guidelines](https://ewel
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [`LICENSE` file](LICENSE) for details.
+This project is licensed under the Apache License 2.0 - see the [`LICENSE` file](https://github.com/ewels/mkdocs-quiz/blob/main/LICENSE) for details.
 
 ## Credits
 
@@ -108,4 +108,4 @@ This project is licensed under the Apache License 2.0 - see the [`LICENSE` file]
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for version history and changes.
+See [CHANGELOG.md](https://ewels.github.io/mkdocs-quiz/changelog/) for version history and changes.
