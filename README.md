@@ -33,9 +33,9 @@ You've come to the right place!
 ```
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/quiz_readme_dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/images/quiz_readme.png">
-  <img src="docs/images/quiz_readme.png" alt="mkdocs-quiz">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ewels/mkdocs-quiz/main/docs/images/quiz_readme_dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ewels/mkdocs-quiz/main/docs/images/quiz_readme.png">
+  <img src="https://raw.githubusercontent.com/ewels/mkdocs-quiz/main/docs/images/quiz_readme.png" alt="mkdocs-quiz">
 </picture>
 
 ## Installation
@@ -88,9 +88,9 @@ Insert these placeholder comments for some intro text with a reset button and a 
 ```
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/results_confetti_dark.gif">
-  <source media="(prefers-color-scheme: light)" srcset="docs/images/results_confetti.gif">
-  <img src="docs/images/results_confetti.gif" alt="mkdocs-quiz">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ewels/mkdocs-quiz/main/docs/images/results_confetti_dark.gif">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ewels/mkdocs-quiz/main/docs/images/results_confetti.gif">
+  <img src="https://raw.githubusercontent.com/ewels/mkdocs-quiz/main/docs/images/results_confetti.gif" alt="mkdocs-quiz">
 </picture>
 
 ## Contributing
