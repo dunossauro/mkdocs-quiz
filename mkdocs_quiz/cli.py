@@ -197,7 +197,7 @@ def migrate(
 
 
 @app.callback()
-def callback():
+def callback() -> None:
     """Required to keep subcommand even when there's only one for now."""
     pass
 

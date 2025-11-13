@@ -330,7 +330,7 @@ class MkDocsQuizPlugin(BasePlugin):
             quiz_ranges.append((match.start(), match.end()))
 
         # Mask fenced code blocks (```...``` or ~~~...~~~)
-        def replace_fenced(match):
+        def replace_fenced(match: re.Match[str]) -> str:
             nonlocal counter
             # Check if this code block is inside a quiz
             match_start = match.start()
