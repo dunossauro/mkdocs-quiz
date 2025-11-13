@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
+import argparse
 import re
+import sys
 from pathlib import Path
-
-import typer
-from rich.console import Console
-
-console = Console()
-
-app = typer.Typer(rich_markup_mode="rich")
 
 
 def convert_quiz_block(quiz_content: str) -> str:
@@ -96,7 +91,7 @@ def migrate_file(file_path: Path, dry_run: bool = False) -> tuple[int, bool]:
     try:
         content = file_path.read_text(encoding="utf-8")
     except Exception as e:
-        console.print(f"  [red]❌ Error reading {file_path}: {e}[/red]")
+        print(f"  Error reading {file_path}: {e}")
         return 0, False
 
     # Pattern to match quiz blocks
@@ -124,45 +119,39 @@ def migrate_file(file_path: Path, dry_run: bool = False) -> tuple[int, bool]:
     return quiz_count, True
 
 
-@app.command()
-def migrate(
-    directory: str = typer.Argument("docs", help="Directory to search for markdown files"),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", "-n", help="Show what would be changed without modifying files"
-    ),
-) -> None:
+def migrate(directory: str, dry_run: bool = False) -> None:
     """Migrate quiz blocks from old syntax to new markdown-style syntax.
 
     Converts old question:/answer:/content: syntax to the new cleaner
     markdown checkbox syntax (- [x] / - [ ]).
 
-    Example:
-        mkdocs-quiz migrate docs/
-        mkdocs-quiz migrate docs/ --dry-run
+    Args:
+        directory: Directory to search for markdown files.
+        dry_run: Show what would be changed without modifying files.
     """
     # Convert string to Path and validate
     dir_path = Path(directory)
 
     if not dir_path.exists():
-        console.print(f"[red]❌ Error: Directory '{directory}' does not exist[/red]")
-        raise typer.Exit(1)
+        print(f"Error: Directory '{directory}' does not exist")
+        sys.exit(1)
 
     if not dir_path.is_dir():
-        console.print(f"[red]❌ Error: '{directory}' is not a directory[/red]")
-        raise typer.Exit(1)
+        print(f"Error: '{directory}' is not a directory")
+        sys.exit(1)
 
-    console.print("🔄 MkDocs Quiz Syntax Migration")
-    console.print(f"📁 Searching for quiz blocks in: {dir_path}")
+    print("MkDocs Quiz Syntax Migration")
+    print(f"Searching for quiz blocks in: {dir_path}")
     if dry_run:
-        console.print("[yellow]🔍 DRY RUN MODE - No files will be modified[/yellow]")
-    console.print()
+        print("DRY RUN MODE - No files will be modified")
+    print()
 
     # Find all markdown files
     md_files = list(dir_path.rglob("*.md"))
 
     if not md_files:
-        console.print("[yellow]⚠️  No markdown files found[/yellow]")
-        raise typer.Exit(0)
+        print("No markdown files found")
+        sys.exit(0)
 
     total_files_modified = 0
     total_quizzes = 0
@@ -175,33 +164,61 @@ def migrate(
             total_quizzes += quiz_count
             quiz_text = "quiz" if quiz_count == 1 else "quizzes"
             if dry_run:
-                console.print(
-                    f"[blue]🔍 Would convert {quiz_count} {quiz_text} in: {file_path.relative_to(dir_path)}[/blue]"
+                print(
+                    f"  Would convert {quiz_count} {quiz_text} in: {file_path.relative_to(dir_path)}"
                 )
             else:
-                console.print(
-                    f"[green]✅ Converted {quiz_count} {quiz_text} in: {file_path.relative_to(dir_path)}[/green]"
-                )
+                print(f"  Converted {quiz_count} {quiz_text} in: {file_path.relative_to(dir_path)}")
 
-    console.print()
+    print()
     if total_files_modified == 0:
-        console.print("[blue]🤷🏻‍♂️ No quiz blocks found to migrate[/blue]")
+        print("No quiz blocks found to migrate")
     else:
-        console.print("[green bold]✨ Migration complete![/green bold]")
+        print("Migration complete!")
         action = "would be" if dry_run else "were"
-        console.print(f"  📝 Files {action} modified: {total_files_modified}")
-        console.print(f"  🎯 Quizzes {action} converted: {total_quizzes}")
+        print(f"  Files {action} modified: {total_files_modified}")
+        print(f"  Quizzes {action} converted: {total_quizzes}")
 
         if dry_run:
-            console.print()
-            console.print("[blue]💡 Run without --dry-run to apply changes[/blue]")
+            print()
+            print("Run without --dry-run to apply changes")
 
 
-@app.callback()
-def callback() -> None:
-    """Required to keep subcommand even when there's only one for now."""
-    pass
+def main() -> None:
+    """Main entry point for the CLI."""
+    parser = argparse.ArgumentParser(
+        prog="mkdocs-quiz",
+        description="MkDocs Quiz CLI - Migrate quiz blocks from old syntax to new markdown-style syntax",
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Migrate subcommand
+    migrate_parser = subparsers.add_parser(
+        "migrate",
+        help="Migrate quiz blocks from old syntax to new markdown-style syntax",
+    )
+    migrate_parser.add_argument(
+        "directory",
+        nargs="?",
+        default="docs",
+        help="Directory to search for markdown files (default: docs)",
+    )
+    migrate_parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Show what would be changed without modifying files",
+    )
+
+    args = parser.parse_args()
+
+    if args.command == "migrate":
+        migrate(args.directory, dry_run=args.dry_run)
+    else:
+        parser.print_help()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    app()
+    main()
