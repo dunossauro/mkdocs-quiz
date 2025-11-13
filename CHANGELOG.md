@@ -7,9 +7,9 @@ It modernises the codebase, changes the quiz markdown syntax, and adds a bunch o
 
 ### 🚨 Breaking Changes
 
-#### New Quiz Syntax (Migration Required)
+#### New Quiz Syntax
 
-The quiz syntax has been completely redesigned to use a cleaner, markdown-style format. The old `question:`, `answer:`, `answer-correct:`, and `content:` syntax is **no longer supported**.
+The quiz syntax has been completely redesigned to use a cleaner, markdown-style format. The old `question:`, `answer:`, `answer-correct:`, and `content:` syntax is **no longer supported**. The opening and closing tags no longer have the `?` characters.
 
 **Old Syntax (v1.x):**
 
@@ -53,36 +53,14 @@ Some additional content here
 - **Markdown support in questions and answers** - Full markdown parsing including bold, italic, code, links, images, etc.
 - **Optional content section** - No longer required to include content when there's nothing additional to show
 - **Full markdown in content section** - Content area now supports complete markdown syntax, not just HTML
-
-#### Per-Quiz Options
-
-- **Show correct answers option** - `show-correct: true` reveals all correct answers in green when user selects wrong answer (defaults to true)
-- **Auto-submit option** - `auto-submit: true` automatically submits quiz when radio button is selected, no Submit button needed (defaults to true)
-- **Disable after submit option** - `disable-after-submit: true` locks the quiz after first submission, prevents changing answers (defaults to true)
-
-#### Navigation & UX
-
-- **Quiz header IDs** - Each quiz gets a unique ID (`quiz-0`, `quiz-1`, etc.) with hover anchor link for direct navigation
-- **Try Again button** - Automatically appears after quiz submission to reset answers and retry
-  - Hidden when `disable-after-submit: true`
-  - Clears all selections and resets quiz state
-  - Updates progress tracker when used
-
-#### Plugin Configuration
-
-All plugin options are configured in `mkdocs.yml` and can also have per-page config.
-
-#### Progress Tracking & Persistence
-
-- **Global progress tracking** - Tracks answered/correct status across all quizzes on the page
+- **Plugin configuragion** - Both site-wise in `mkdocs.yml` or page-specific in the YAML frontmatter.
+- **Auto-submit answers** - No need to press 'Submit' for single-choice questions
+- **Quiz header IDs** - Each quiz gets a unique ID (`quiz-0`, `quiz-1`, etc.) with hover anchor link for direct navigation. Optionally also include a numbered heading for each question.
+- **Global progress tracking** - Tracks answered/correct status across all quizzes on the page. Progress trackers in the sidebar (desktop) or top of page (mobile) show progress.
 - **LocalStorage persistence** - Progress automatically saved per-page and restored on reload
-- **Progress sidebar widget** - Floating sidebar displays:
-  - Answered questions count (e.g., "3 / 5")
-  - Progress bar with percentage
-  - Correct answers count and percentage
-  - Only appears when there are 2+ quizzes on the page
-  - Automatically hidden on mobile/small screens
-- **Custom event dispatching** - Emits `quizProgressUpdate` event for custom integrations
+- **Reset button** - Ability to clear localStorage and current answers, to start again
+- **Results panel** - Add a placeholder to the page to show results and fire confetti when the quiz is complete 🎉
+- _and many more small additions.._
 
 ## Pre-1.0.0
 
