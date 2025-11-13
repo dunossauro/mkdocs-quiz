@@ -1,5 +1,11 @@
 # Changelog
 
+## **Version 1.0.2** (2025-11-13)
+
+- Refactor the migration script to not use `rich` and `typer`
+  - Typer requires Python 3.10 and the dependencies were complicating the conda-forge build
+  - The migration script is a bonus helper utility only, and these weren't needed for functionality
+
 ## **Version 1.0.1** (2025-11-13)
 
 - Add check for old v0 quiz syntax [#8](https://github.com/ewels/mkdocs-quiz/pull/8)
