@@ -13,7 +13,7 @@ authors = [
     {name = "Sebastian Jörz", email = "sjoerz@skyface.de"},
     {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
 ]
-keywords = ["mkdocs", "quiz", "plugin", "markdown", "documentation"]
+keywords = ["mkdocs", "quiz", "plugin", "markdown", "documentation", "mkdocs-material", "multiple-choice", "exam", "questions-and-answers"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -32,13 +32,13 @@ classifiers = [
 ]
 dependencies = [
     "mkdocs>=1.0.0",
-    "typer>=0.20.0",
-    "rich>=13.0.0",
     "importlib-resources>=5.0; python_version < '3.9'",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "rich>=13.0.0", # For CLI: migration tool
+    "typer>=0.20.0", # For CLI: migration tool
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.8.0",
