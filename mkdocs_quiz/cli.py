@@ -173,13 +173,14 @@ def migrate(
         if modified:
             total_files_modified += 1
             total_quizzes += quiz_count
+            quiz_text = "quiz" if quiz_count == 1 else "quizzes"
             if dry_run:
                 console.print(
-                    f"[blue]🔍 Would convert {quiz_count} quiz(es) in: {file_path.relative_to(dir_path)}[/blue]"
+                    f"[blue]🔍 Would convert {quiz_count} {quiz_text} in: {file_path.relative_to(dir_path)}[/blue]"
                 )
             else:
                 console.print(
-                    f"[green]✅ Converted {quiz_count} quiz(es) in: {file_path.relative_to(dir_path)}[/green]"
+                    f"[green]✅ Converted {quiz_count} {quiz_text} in: {file_path.relative_to(dir_path)}[/green]"
                 )
 
     console.print()
