@@ -47,6 +47,7 @@ This is a MkDocs plugin that hooks into the MkDocs build pipeline:
    - Replaces placeholders with stored quiz HTML
    - CSS and JS loaded at module level from `mkdocs_quiz/css/` and `mkdocs_quiz/js/`
    - Injected as inline `<style>` and `<script>` tags (not external files)
+   - Translations passed to JavaScript as JSON via `window.mkdocsQuizTranslations`
    - If `auto_number` is enabled, adds additional script to inject numbering class
    - JS handles form submission, answer validation, visual feedback, and localStorage persistence
 
@@ -97,6 +98,71 @@ quiz:
 
 The plugin checks `_should_process_page()` to respect `enabled_by_default` and per-page `enabled` settings.
 
+### Translation System
+
+MkDocs Quiz supports internationalization through `.po` translation files. All user-facing text (buttons, messages, progress tracking) can be translated.
+
+**Architecture:**
+
+1. **Single Source of Truth**:
+   - English strings are written directly in Python/JavaScript code where they're used
+   - Translation keys ARE the English strings (standard gettext pattern)
+
+2. **Translation Manager** ([mkdocs_quiz/translations.py](mkdocs_quiz/translations.py)):
+   - `TranslationManager` class handles loading and resolving translations
+   - Loading order: Built-in `.po` → Custom `.po` → Falls back to English key
+   - Uses `polib` library to parse `.po` files (standard gettext format)
+   - `polib` is a required dependency
+
+3. **Translation Files** ([mkdocs_quiz/locales/](mkdocs_quiz/locales/)):
+   - `mkdocs_quiz.pot` - Template extracted from source code
+   - `en_US.po`, `fr_FR.po`, etc. - Language translations
+   - Standard gettext format, compatible with Poedit, Weblate, Crowdin
+   - Files contain `msgid` (English source) and `msgstr` (translation)
+
+4. **Integration Flow**:
+   - `_get_translation_manager()` determines language for each page:
+     - Page frontmatter (`quiz.language`)
+     - Pattern matching (`language_patterns` config)
+     - Global `language` config
+     - Fallback to `en_US`
+   - Python generates HTML with translated strings using `t.get("English text")`
+   - Translations passed to JavaScript via `window.mkdocsQuizTranslations`
+   - JavaScript uses `t("English text", params)` helper for dynamic text
+
+5. **Configuration Options**:
+
+   ```yaml
+   plugins:
+     - mkdocs_quiz:
+         language: fr_FR # Global default
+         language_patterns:
+           - pattern: "fr/**/*"
+             language: fr_FR
+         custom_translations:
+           en_US: translations/en_custom.po
+           ja_JP: translations/ja_JP.po
+   ```
+
+6. **CLI Tools**:
+   - `mkdocs-quiz check-translations` - Validate completeness and detect orphaned keys
+   - `mkdocs-quiz init-translation` - Initialize new language
+   - `mkdocs-quiz extract-strings` - Extract translatable strings to .pot template (wraps pybabel)
+   - `mkdocs-quiz update-translations` - Update all .po files from .pot template (wraps pybabel)
+   - Pre-commit hook validates translations automatically
+
+**Adding New Translatable Strings:**
+
+When adding new user-facing text:
+
+1. Write English text directly in code: `t.get("New message")`
+2. Extract strings to update `.pot`: `mkdocs-quiz extract-strings`
+3. Update all `.po` files: `mkdocs-quiz update-translations`
+4. Translate new strings in each `.po` file
+5. Run `mkdocs-quiz check-translations` to verify
+
+**Note:** The `extract-strings` and `update-translations` commands wrap pybabel functionality for convenience. Babel must be installed as a dev dependency.
+
 ## Development Commands
 
 ### Setup
@@ -136,6 +202,17 @@ ruff format mkdocs_quiz tests  # Format Python
 ruff check mkdocs_quiz tests   # Lint Python
 npx prettier --write "mkdocs_quiz/**/*.{js,css}"  # Format JS/CSS
 mypy mkdocs_quiz               # Type check
+mkdocs-quiz check-translations # Check translation completeness
+```
+
+### Translation Management
+
+```bash
+# Check translation completeness (runs in pre-commit)
+mkdocs-quiz check-translations
+
+# Initialize new language
+mkdocs-quiz init-translation <lang_code> -o mkdocs_quiz/locales/<lang_code>.po
 ```
 
 ### Building
@@ -162,17 +239,26 @@ When writing tests:
 
 ## CLI Tool
 
-The plugin includes a CLI tool for migrating old quiz syntax:
+The plugin includes a CLI tool for various tasks:
 
 ```bash
 # Migrate quizzes from old question:/answer: syntax to new markdown checkbox syntax
 mkdocs-quiz migrate docs/
 
-# Dry run to preview changes
-mkdocs-quiz migrate docs/ --dry-run
+# Create a new translation file
+mkdocs-quiz init-translation <lang_code>
+
+# Extract translatable strings from source code (for contributors)
+mkdocs-quiz extract-strings
+
+# Update translation files with new strings (for contributors)
+mkdocs-quiz update-translations
+
+# Check translation completeness
+mkdocs-quiz check-translations
 ```
 
-The CLI tool ([mkdocs_quiz/cli.py](mkdocs_quiz/cli.py)) converts the legacy format to the current `- [x]`/`- [ ]` checkbox syntax.
+The CLI tool ([mkdocs_quiz/cli.py](mkdocs_quiz/cli.py)) provides utilities for quiz migration, translation management, and validation.
 
 ## Material Theme Integration
 
