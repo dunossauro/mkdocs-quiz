@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -237,6 +238,40 @@ def init_translation(language: str, output: str | None = None) -> None:
     print("Edit the file to add translations, then configure in mkdocs.yml")
 
 
+def _get_translator_info() -> str | None:
+    """Get translator info from git config.
+
+    Returns:
+        Translator name and email in format "Name <email@example.com>", or None if not available.
+    """
+    import subprocess
+
+    try:
+        # Get git user name and email
+        name = subprocess.run(
+            ["git", "config", "user.name"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        ).stdout.strip()
+
+        email = subprocess.run(
+            ["git", "config", "user.email"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        ).stdout.strip()
+
+        if name and email:
+            return f"{name} <{email}>"
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+
+    return None
+
+
 def _extract_python_strings(py_file: Path, catalog: Any) -> int:
     """Extract translatable strings from Python files.
 
@@ -368,7 +403,7 @@ def update_translations() -> None:
     # Lazy import babel (it's only in dev dependencies)
     try:
         from babel.messages.catalog import Catalog
-        from babel.messages.pofile import read_po, write_po
+        from babel.messages.pofile import write_po
     except ImportError:
         print("Error: babel is required for updating translations")
         print("Install with: pip install babel")
@@ -402,9 +437,21 @@ def update_translations() -> None:
 
     total_count = count + js_count
 
+    # Update catalog metadata
+    now = datetime.now(timezone.utc)
+    catalog.revision_date = now
+    catalog.msgid_bugs_address = "Phil Ewels <phil.ewels@seqera.io>"
+    catalog.last_translator = "Phil Ewels <phil.ewels@seqera.io>"
+
     # Write catalog to .pot file
     with open(pot_file, "wb") as f:
         write_po(f, catalog, width=120)
+
+    # Remove Language-Team from .pot file using polib
+    pot = polib.pofile(str(pot_file))
+    if "Language-Team" in pot.metadata:
+        del pot.metadata["Language-Team"]
+    pot.save(str(pot_file))
 
     print(f"✓ Total: {total_count} strings extracted to template")
 
@@ -412,11 +459,32 @@ def update_translations() -> None:
     po_files = list(locales_dir.glob("*.po"))
     print(f"Updating {len(po_files)} translation file(s)...")
     for po_file in po_files:
-        with open(po_file, "rb") as f:
-            po_catalog = read_po(f)
-        po_catalog.update(catalog)
-        with open(po_file, "wb") as f:
-            write_po(f, po_catalog, width=120)
+        # Use polib directly instead of babel for updating
+        po = polib.pofile(str(po_file))
+
+        # Merge new strings from catalog
+        for entry in catalog:
+            if entry.id:
+                existing = po.find(str(entry.id))
+                if not existing:
+                    po.append(
+                        polib.POEntry(msgid=str(entry.id), msgstr="", occurrences=entry.locations)
+                    )
+
+        # Update revision date
+        now = datetime.now(timezone.utc)
+        po.metadata["PO-Revision-Date"] = now.strftime("%Y-%m-%d %H:%M%z")
+
+        # Update Last-Translator from git config if available
+        translator = _get_translator_info()
+        if translator:
+            po.metadata["Last-Translator"] = translator
+
+        # Remove Language-Team placeholder (not needed for most projects)
+        if "Language-Team" in po.metadata:
+            del po.metadata["Language-Team"]
+
+        po.save(str(po_file))
 
     print(f"✓ Updated {len(po_files)} file(s)")
     print("Translate new strings and run 'mkdocs-quiz translations check' to verify")
@@ -424,12 +492,17 @@ def update_translations() -> None:
 
 def check_translations() -> None:
     """Check translation completeness and validity."""
-    # Get path to locales directory
     module_dir = Path(__file__).parent
     locales_dir = module_dir / "locales"
+    pot_file = locales_dir / "mkdocs_quiz.pot"
+
+    # Load template to get expected strings
+    pot = polib.pofile(str(pot_file))
+    expected_strings = {entry.msgid for entry in pot if entry.msgid}
 
     # Find all .po files (excluding en_US if it exists)
     po_files = [f for f in locales_dir.glob("*.po") if f.stem.lower() != "en_us"]
+
     print("Checking translation files...\n")
 
     all_valid = True
@@ -437,6 +510,13 @@ def check_translations() -> None:
         po = polib.pofile(str(po_file))
         language = po_file.stem
 
+        # Get strings present in .po file (non-obsolete)
+        po_strings = {entry.msgid for entry in po if entry.msgid and not entry.obsolete}
+
+        # Find missing strings (in template but not in .po)
+        missing_strings = expected_strings - po_strings
+
+        # Standard polib checks
         total = len(po)
         translated = len(po.translated_entries())
         untranslated = len(po.untranslated_entries())
@@ -453,9 +533,16 @@ def check_translations() -> None:
         print(f"  Fuzzy: {fuzzy}")
         print(f"  Obsolete: {obsolete}")
 
-        if untranslated > 0 or fuzzy > 0 or obsolete > 0:
+        if missing_strings:
+            print(f"  Missing: {len(missing_strings)} (not in .po file)")
             all_valid = False
-            if obsolete > 0:
+
+        if untranslated > 0 or fuzzy > 0 or obsolete > 0 or missing_strings:
+            all_valid = False
+            if missing_strings:
+                print("  Status: ⚠️  Missing strings from source code")
+                print("  Fix: Run 'mkdocs-quiz translations update' to sync")
+            elif obsolete > 0:
                 print("  Status: ⚠️  Has obsolete entries (orphaned translation keys)")
                 print("  Fix: Remove obsolete entries marked with #~ prefix")
             else:

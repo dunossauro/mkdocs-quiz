@@ -7,11 +7,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: mkdocs-quiz 1.0.1\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-27 21:21+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Report-Msgid-Bugs-To: Phil Ewels <phil.ewels@seqera.io>\n"
+"POT-Creation-Date: 2025-11-27 22:19+0100\n"
+"PO-Revision-Date: 2025-11-27 21:19+0000\n"
+"Last-Translator: Phil Ewels <phil.ewels@seqera.io>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -46,7 +45,9 @@ msgid "Reset quiz"
 msgstr ""
 
 #: plugin.py:714
-msgid "Quiz results are saved to your browser's local storage and will persist between sessions."
+msgid ""
+"Quiz results are saved to your browser's local storage and will persist "
+"between sessions."
 msgstr ""
 
 #: js/quiz.js:334
@@ -70,7 +71,8 @@ msgid "Better luck next time! Keep trying!"
 msgstr ""
 
 #: js/quiz.js:462
-msgid "Are you sure you want to reset the quiz? This will clear your progress."
+msgid ""
+"Are you sure you want to reset the quiz? This will clear your progress."
 msgstr ""
 
 #: js/quiz.js:579
