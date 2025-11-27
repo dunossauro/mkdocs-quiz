@@ -130,20 +130,9 @@ Once your translation is complete and tested:
   "Content-Type: text/plain; charset=UTF-8\n"
   ```
 
-### Testing Your Translation
-
-Before submitting, verify:
-
-- [ ] All strings are translated (run `check-translations`)
-- [ ] No untranslated entries remain
-- [ ] No fuzzy entries remain
-- [ ] Placeholders like `{n}` are preserved
-- [ ] UI elements display correctly (test with `mkdocs serve`)
-- [ ] Text fits in buttons and labels without overflow
-
 ## CLI Tools for Contributors
 
-### `check-translations`
+### `mkdocs-quiz translations check`
 
 Validates translation completeness and detects issues:
 
@@ -153,7 +142,7 @@ mkdocs-quiz translations check
 
 This command is also run automatically in pre-commit hooks.
 
-### `init`
+### `mkdocs-quiz translations init`
 
 Creates a new translation file from the template:
 
@@ -163,11 +152,7 @@ mkdocs-quiz translations init <language_code>
 
 By default creates `{language}.po` in current directory. Use `-o` to specify output path.
 
-## Maintainer Tools
-
-The following command is for maintainers updating translations when new strings are added to the codebase.
-
-### `update`
+### `mkdocs-quiz translations update`
 
 Extracts strings from source code and updates all translation files:
 

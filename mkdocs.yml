@@ -68,6 +68,6 @@ nav:
   - configuration.md
   - updating.md
   - Contributing:
-      - contributing.md
+      - Contributing guidelines: contributing.md
       - contributing-translations.md
   - changelog.md

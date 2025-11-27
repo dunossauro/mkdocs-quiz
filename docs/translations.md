@@ -1,6 +1,26 @@
+---
+quiz:
+  language: fr_FR
+  auto_number: true
+---
+
 # Translations
 
-MkDocs Quiz supports multiple languages for all user-facing text (buttons, messages, progress tracking, etc.).
+MkDocs Quiz supports multiple languages for all user-facing text (buttons, messages, progress tracking, etc.). This page is configured to render quizzes in French:
+
+!!! info
+
+    <!-- mkdocs-quiz intro -->
+
+<quiz>
+Quelles sont les meilleures pâtisseries ?
+- [ ] Brioches à la cannelle
+- [x] Croissant
+- [x] Pain au chocolat
+- [ ] Brioches glacées
+</quiz>
+
+<!-- mkdocs-quiz results -->
 
 ## Built-in Languages
 
@@ -24,21 +44,30 @@ plugins:
 
 Override the language for specific pages:
 
-```yaml
+```md
 ---
 quiz:
   language: fr_FR
 ---
+
 # Ma Page de Quiz
 
+!!! info
+
+    <!-- mkdocs-quiz intro -->
+
 <quiz>
-Quelle est la capitale de la France?
-- [x] Paris
-- [ ] Londres
+Quelles sont les meilleures pâtisseries ?
+- [ ] Brioches à la cannelle
+- [x] Croissant
+- [x] Pain au chocolat
+- [ ] Brioches glacées
 </quiz>
+
+<!-- mkdocs-quiz results -->
 ```
 
-### Auto-Detect Language by Path
+### Set Language by Path
 
 Useful for multilingual sites organized by directory:
 
